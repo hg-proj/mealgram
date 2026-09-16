@@ -1,0 +1,62 @@
+services:
+
+  # DB
+  postgres:
+
+    image: pgvector/pgvector:pg16           # pgvector: 벡터 저장/비교 검색 확장, pg16: 안정 버전
+    container_name: mealgram-postgres
+
+    environment:
+      POSTGRES_DB: mealgram
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+
+    ports:
+      - "5432:5432" 
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data      # 공식 고정 경로
+
+    healthcheck:                             # 컨테이너 연결 가능 여부 확인
+      test: ["CMD-SHELL", "pg_isready -U mealgram"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Redis 
+  redis:
+
+    image: redis:7                          # 최신 안정버전 redis 7
+    container_name: mealgram-redis
+
+    ports:
+      - "6379:6379" 
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ### 배포 직전 주석 해제 ###
+
+  # # backend
+
+  # backend:
+
+  #   build: ./backend
+  #   container_name: mealgram-backend
+
+  #   ports:
+  #     - "8080:8080"
+
+  #   depends_on:                         # 서비스 실행 순서 지정
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+# volume 
+volumes:
+  pgdata:
+
