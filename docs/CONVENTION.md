@@ -18,11 +18,13 @@
 | --- | --- | --- |
 | 성공 응답 | `{ "success": true,`<br>`"data" }` 형태 | `{ "success": true,`<br>`"data": {...}}` |
 | 실패 응답 | `{ "success": false, `<br>`"error": { "code":"", `<br>`"message":"" }}` 형태, <br>code는 직접 정의한 에러 이름 | `{ "success": false,`<br>`"error": { "code": "MEMBER_NOT_FOUND",`<br>`"message": "..." }}` |
+| 검증 실패(400) | 위 실패 응답 형태에 `fieldErrors` 배열 추가, <br>필드별로 어디가 왜 틀렸는지 전달 | `{ "success": false,`<br>`"error": { "code": "VALIDATION_FAILED",`<br>`"message": "...",`<br>`"fieldErrors": [`<br>`{ "field": "nickname", "message": "..." }`<br>`] }}` |
 | 인증 헤더 | Bearer 토큰 | `Authorization: Bearer {accessToken}` |
 | 목록 조회 페이지네이션 | `page`, `size` 쿼리파라미터 | `/ingredients?page=0&size=20` |
 
 - Bearer 토큰 사용 이유: REST API + 프론트/백엔드 분리 구조에 가장 잘 맞는 표준 방식이라 선택
 - 페이지네이션 사용 이유: Spring Data JPA가 page, size를 기본 지원해서 직접 구현할 필요 없음
+- fieldErrors 사용 이유: 회원가입처럼 필드 여러 개를 한 번에 검증하는 API는 어느 필드가 틀렸는지 개별로 알려줘야 프론트에서 필드별 에러 표시가 가능함
 
 
 ---
