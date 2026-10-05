@@ -99,7 +99,7 @@ candidates[] 항목
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /recipes/{id} | 레시피 상세 + 부족 재료 | - | 경로변수 | 200<br>id<br>name<br>category<br>cookingMethod (조리방법)<br>calorie (칼로리)<br>carbohydrate (탄수화물)<br>protein (단백질)<br>fat (지방)<br>sodium (나트륨)<br>cookingSteps (조리단계)<br>imageUrl<br>missingIngredients[] (장보기 리스트) |
+| GET | /recipes/{id} | 레시피 상세 + 부족 재료 | - | 경로변수 | 200<br>id<br>name<br>category<br>cookingMethod (조리방법)<br>calorie (칼로리)<br>carbohydrate (탄수화물)<br>protein (단백질)<br>fat (지방)<br>sodium (나트륨)<br>cookingSteps (조리단계)<br>imageUrl<br>missingIngredients[] (장보기 리스트, 양념 제외)<br>seasonings[] (필요한 양념) |
 
 ### 저장식단
 마이페이지 - 내 식단
