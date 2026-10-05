@@ -72,8 +72,25 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| POST | /meals | 식단 추천 요청 | requiredId<br>(내 재료 중 필수재료, 하드 필터)<br>subIds[]<br>(내 재료 중 서브재료, 랭킹 가중치)<br>ingredientId<br>(주재료, 하드 필터)<br>goal<br>genre | body | 201<br>id<br>candidates[] (추천 식단 후보 목록) |
-| GET | /meals/{id} | 특정 추천 결과 다시 조회 | - | 경로변수 | 200<br>id<br>candidates[] |
+| POST | /meals | 식단 추천 요청 | requiredId<br>(내 재료 중 필수재료, 우선 필터)<br>subIds[]<br>(내 재료 중 서브재료, 랭킹 가중치)<br>ingredientId<br>(주재료, 우선 필터)<br>goal<br>genre | body | 201<br>id<br>relaxed (조건을 완화했는지)<br>candidates[] (추천 식단 후보 목록) |
+| GET | /meals/{id} | 특정 추천 결과 다시 조회 | - | 경로변수 | 200<br>id<br>relaxed (조건 완화 여부)<br>candidates[] |
+
+모든 요청 값은 선택. 아무것도 보내지 않으면 랜덤 후보에서 추천
+
+필수재료와 주재료는 우선 적용. 조건에 맞는 후보가 15개 미만이면 필수 조건을 하나씩 줄여가며 채우고, 그래도 부족하면 뜻이 비슷한 레시피, 마지막에는 랜덤 레시피로 채움. 이렇게 조건을 완화했으면 relaxed(조건 완화 여부)가 true
+
+candidates[] 항목
+
+| 필드 | 설명 |
+| --- | --- |
+| style | 식단 스타일 이름 |
+| reason | 한 줄 설명 |
+| recipes[] | 식단에 들어간 레시피 목록. 각 항목은 id, name, category, imageUrl |
+
+에러
+- 404 조건에 맞는 레시피가 없음(레시피 자체가 하나도 없을 때)
+- 404 추천 결과를 찾을 수 없음(24시간이 지나 만료되었거나 없는 id)
+- 502 식단 생성 실패(LLM 호출 실패, 응답 형식 오류)
 
 
 ### 레시피
