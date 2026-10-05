@@ -20,6 +20,9 @@ import com.mealgram.member.MemberRepository;
 @Service
 public class IngredientService {
 
+    private static final String EXCLUDED_CATEGORY = "양념";
+    private static final long MIN_RECIPE_COUNT = 2;
+
     private final IngredientRepository ingredientRepository;
     private final MemberIngredientRepository memberIngredientRepository;
     private final MemberRepository memberRepository;
@@ -35,7 +38,7 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public List<IngredientSearchResponse> search(String keyword, Pageable pageable) {
 
-        return ingredientRepository.findByNameContaining(keyword, pageable)
+        return ingredientRepository.searchSelectable(keyword, EXCLUDED_CATEGORY, MIN_RECIPE_COUNT, pageable)
                 .map(IngredientSearchResponse::from)
                 .getContent();
 
