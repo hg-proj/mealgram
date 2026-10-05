@@ -29,6 +29,8 @@ import lombok.NoArgsConstructor;
 @EntityListeners(AuditingEntityListener.class)
 public class Ingredient {
 
+    public static final String SEASONING_CATEGORY = "양념";
+
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
