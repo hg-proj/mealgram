@@ -196,7 +196,7 @@ erDiagram
 | sodium (나트륨) | DECIMAL | NOT NULL |
 | cooking_steps (조리단계) | TEXT | NOT NULL |
 | image_url (이미지url) | VARCHAR(255) | nullable |
-| embedding (임베딩 벡터) | VECTOR(1536) | NOT NULL |
+| embedding (임베딩 벡터) | VECTOR(1536) | nullable |
 | ingredient_raw_text (원본 재료 텍스트) | TEXT | NOT NULL |
 
 ### ingredient (재료)
