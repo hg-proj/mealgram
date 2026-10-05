@@ -15,6 +15,15 @@ public record RecipeCandidate(Long id,
                               BigDecimal fat,
                               BigDecimal sodium,
                               List<String> ingredients,
-                              double similarity) {
+                              double similarity,
+                              long overlapCount,
+                              boolean matched) {
+
+    public RecipeCandidate withMatched(boolean matched) {
+
+        return new RecipeCandidate(id, name, category, cookingMethod, calorie, carbohydrate, protein, fat, sodium,
+                ingredients, similarity, overlapCount, matched);
+
+    }
 
 }

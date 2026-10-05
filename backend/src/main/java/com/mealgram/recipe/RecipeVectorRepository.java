@@ -16,6 +16,8 @@ import com.mealgram.recipe.dto.RecipeCandidate;
 @Repository
 public class RecipeVectorRepository {
 
+    private static final long NO_MATCH_ID = -1L;
+
     private static final String SELECT_COLUMNS = """
             select r.id, r.name, r.category, r.cooking_method, r.calorie, r.carbohydrate,
                    r.protein, r.fat, r.sodium,
@@ -26,15 +28,20 @@ public class RecipeVectorRepository {
             """;
 
     private static final String SIMILAR_SQL = SELECT_COLUMNS + """
-                   1 - (r.embedding <=> cast(:vector as vector)) as similarity
+                   1 - (r.embedding <=> cast(:vector as vector)) as similarity,
+                   (select count(*) from recipe_ingredient ri
+                     where ri.recipe_id = r.id and ri.ingredient_id in (:optionalIds)) as overlap
               from recipe r
              where r.embedding is not null
+               and (select count(*) from recipe_ingredient ri
+                     where ri.recipe_id = r.id and ri.ingredient_id in (:requiredIds)) >= :minRequiredCount
              order by r.embedding <=> cast(:vector as vector)
              limit :limit
             """;
 
     private static final String RANDOM_SQL = SELECT_COLUMNS + """
-                   0.0 as similarity
+                   0.0 as similarity,
+                   0 as overlap
               from recipe r
              order by random()
              limit :limit
@@ -46,10 +53,17 @@ public class RecipeVectorRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<RecipeCandidate> findSimilar(float[] vector, int limit) {
+    public List<RecipeCandidate> findSimilar(float[] vector,
+                                             List<Long> requiredIds,
+                                             int minRequiredCount,
+                                             List<Long> optionalIds,
+                                             int limit) {
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("vector", Arrays.toString(vector))
+                .addValue("requiredIds", orNoMatch(requiredIds))
+                .addValue("minRequiredCount", minRequiredCount)
+                .addValue("optionalIds", orNoMatch(optionalIds))
                 .addValue("limit", limit);
 
         return jdbcTemplate.query(SIMILAR_SQL, params, this::toCandidate);
@@ -62,13 +76,19 @@ public class RecipeVectorRepository {
 
     }
 
+    private List<Long> orNoMatch(List<Long> ids) {
+
+        return ids.isEmpty() ? List.of(NO_MATCH_ID) : ids;
+
+    }
+
     private RecipeCandidate toCandidate(ResultSet rs, int rowNum) throws SQLException {
 
         return new RecipeCandidate(rs.getLong("id"), rs.getString("name"), rs.getString("category"),
                 rs.getString("cooking_method"), rs.getBigDecimal("calorie"), rs.getBigDecimal("carbohydrate"),
                 rs.getBigDecimal("protein"), rs.getBigDecimal("fat"), rs.getBigDecimal("sodium"),
                 Arrays.asList((String[]) rs.getArray("ingredients").getArray()),
-                rs.getDouble("similarity"));
+                rs.getDouble("similarity"), rs.getLong("overlap"), false);
 
     }
 
