@@ -1,10 +1,12 @@
 package com.mealgram.common.embedding;
 
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -14,6 +16,7 @@ import org.springframework.web.client.RestClient;
 public class EmbeddingClient {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);
 
     private final RestClient restClient;
     private final String apiKey;
@@ -22,7 +25,10 @@ public class EmbeddingClient {
     public EmbeddingClient(@Value("${openai.api-key}") String apiKey,
                            @Value("${openai.embedding-model}") String model,
                            @Value("${openai.embedding-url}") String url) {
-        this.restClient = RestClient.builder().baseUrl(url).build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory();
+        requestFactory.setReadTimeout(READ_TIMEOUT);
+
+        this.restClient = RestClient.builder().baseUrl(url).requestFactory(requestFactory).build();
         this.apiKey = apiKey;
         this.model = model;
     }
@@ -39,10 +45,16 @@ public class EmbeddingClient {
                 .retrieve()
                 .body(EmbeddingResponse.class);
 
-        return response.data().stream()
+        List<float[]> vectors = response.data().stream()
                 .sorted(Comparator.comparingInt(EmbeddingItem::index))
                 .map(EmbeddingItem::embedding)
                 .toList();
+
+        if (vectors.size() != texts.size()) {
+            throw new IllegalStateException("임베딩 응답 개수가 요청과 다릅니다.");
+        }
+
+        return vectors;
 
     }
 
