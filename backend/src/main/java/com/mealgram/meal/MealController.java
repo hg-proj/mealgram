@@ -2,6 +2,7 @@ package com.mealgram.meal;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,9 +28,10 @@ public class MealController {
     }
 
     @PostMapping
-    public ResponseEntity<MealResponse> recommend(@Valid @RequestBody MealRequest request) {
+    public ResponseEntity<MealResponse> recommend(@Valid @RequestBody MealRequest request,
+                                                  @AuthenticationPrincipal Long memberId) {
 
-        MealResponse response = mealService.recommend(request.requiredId(), request.subIds(),
+        MealResponse response = mealService.recommend(memberId, request.requiredId(), request.subIds(),
                 request.ingredientId(), request.goal(), request.genre());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
