@@ -1,5 +1,6 @@
 package com.mealgram.meal;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,9 @@ public final class MealPrompt {
             """;
 
     private static final String RECIPE_LINE =
-            "id=%d | %s | %s | %skcal 탄수화물 %sg 단백질 %sg 지방 %sg | 재료: %s";
+            "id=%d | %s | %s | %s | 재료: %s";
+    private static final String NUTRITION = "%skcal 탄수화물 %sg 단백질 %sg 지방 %sg";
+    private static final String NO_NUTRITION = "영양 정보 없음";
     private static final String MATCHED_MARK = " | 조건충족";
     private static final String NOT_SELECTED = "선택 안 함";
 
@@ -50,14 +53,28 @@ public final class MealPrompt {
         boolean mixed = candidates.stream().anyMatch(candidate -> !candidate.matched());
         String recipes = candidates.stream()
                 .map(candidate -> RECIPE_LINE.formatted(candidate.id(), candidate.name(), candidate.category(),
-                        candidate.calorie().stripTrailingZeros().toPlainString(),
-                        candidate.carbohydrate().stripTrailingZeros().toPlainString(),
-                        candidate.protein().stripTrailingZeros().toPlainString(),
-                        candidate.fat().stripTrailingZeros().toPlainString(),
+                        nutrition(candidate),
                         String.join(", ", candidate.ingredients())) + (mixed && candidate.matched() ? MATCHED_MARK : ""))
                 .collect(Collectors.joining("\n"));
 
         return USER.formatted(valueOrDefault(goal), valueOrDefault(genre), recipes);
+
+    }
+
+    private static String nutrition(RecipeCandidate candidate) {
+
+        if (candidate.calorie() == null) {
+            return NO_NUTRITION;
+        }
+
+        return NUTRITION.formatted(plain(candidate.calorie()), plain(candidate.carbohydrate()),
+                plain(candidate.protein()), plain(candidate.fat()));
+
+    }
+
+    private static String plain(BigDecimal value) {
+
+        return value.stripTrailingZeros().toPlainString();
 
     }
 
