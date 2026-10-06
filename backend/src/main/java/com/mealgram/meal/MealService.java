@@ -22,6 +22,7 @@ import com.mealgram.recipe.Recipe;
 import com.mealgram.recipe.RecipeRepository;
 import com.mealgram.recipe.RecipeSearchService;
 import com.mealgram.recipe.dto.RecipeCandidate;
+import com.mealgram.recipe.dto.RecipeSearchResult;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
@@ -58,13 +59,13 @@ public class MealService {
                                   String goal,
                                   String genre) {
 
-        List<RecipeCandidate> candidates = recipeSearchService.search(requiredId, subIds, mainIngredientId, goal, genre);
+        RecipeSearchResult found = recipeSearchService.search(requiredId, subIds, mainIngredientId, goal, genre);
+        List<RecipeCandidate> candidates = found.candidates();
         if (candidates.isEmpty()) {
             throw new BusinessException(ErrorCode.RECIPE_CANDIDATE_NOT_FOUND);
         }
 
-        boolean relaxed = candidates.stream().anyMatch(candidate -> !candidate.matched());
-        MealResponse response = new MealResponse(UUID.randomUUID().toString(), relaxed,
+        MealResponse response = new MealResponse(UUID.randomUUID().toString(), found.relaxed(),
                 generate(candidates, goal, genre));
         redisTemplate.opsForValue().set(KEY_PREFIX + response.id(), jsonMapper.writeValueAsString(response), RESULT_TTL);
 

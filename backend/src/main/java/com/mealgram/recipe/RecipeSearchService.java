@@ -18,6 +18,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.ingredient.Ingredient;
 import com.mealgram.ingredient.IngredientRepository;
 import com.mealgram.recipe.dto.RecipeCandidate;
+import com.mealgram.recipe.dto.RecipeSearchResult;
 
 // 질문 임베딩, 벡터 검색, 필터와 조건 완화, 재정렬 처리 서비스
 
@@ -28,6 +29,7 @@ public class RecipeSearchService {
     private static final int CANDIDATE_SIZE = 30;
     private static final int MIN_CANDIDATE_SIZE = 15;
     private static final double OVERLAP_WEIGHT = 0.3;
+    private static final Map<String, Integer> MIN_CATEGORY_SIZE = Map.of("밥", 3, "국&찌개", 3, "반찬", 6);
 
     private final RecipeVectorRepository recipeVectorRepository;
     private final IngredientRepository ingredientRepository;
@@ -41,7 +43,7 @@ public class RecipeSearchService {
         this.embeddingClient = embeddingClient;
     }
 
-    public List<RecipeCandidate> search(Long requiredId,
+    public RecipeSearchResult search(Long requiredId,
                                         List<Long> subIds,
                                         Long mainIngredientId,
                                         String goal,
@@ -58,9 +60,11 @@ public class RecipeSearchService {
 
         String queryText = RecipeQueryText.of(findNames(requiredIds, optionalIds), goal, genre);
         if (queryText.isEmpty()) {
-            return recipeVectorRepository.findRandom(CANDIDATE_SIZE).stream()
+            List<RecipeCandidate> random = new ArrayList<>(recipeVectorRepository.findRandom(CANDIDATE_SIZE).stream()
                     .map(candidate -> candidate.withMatched(true))
-                    .toList();
+                    .toList());
+
+            return new RecipeSearchResult(fillCategories(random, null), false);
         }
 
         float[] vector = embeddingClient.embed(List.of(queryText)).get(0);
@@ -79,9 +83,31 @@ public class RecipeSearchService {
                     .forEach(candidate -> result.add(candidate.withMatched(matched)));
         }
 
-        return result.isEmpty()
-                ? recipeVectorRepository.findRandom(CANDIDATE_SIZE)
-                : result;
+        if (result.isEmpty()) {
+            return new RecipeSearchResult(fillCategories(
+                    new ArrayList<>(recipeVectorRepository.findRandom(CANDIDATE_SIZE)), null), true);
+        }
+        boolean relaxed = result.stream().anyMatch(candidate -> !candidate.matched());
+
+        return new RecipeSearchResult(fillCategories(result, vector), relaxed);
+
+    }
+
+    private List<RecipeCandidate> fillCategories(List<RecipeCandidate> candidates, float[] vector) {
+
+        Set<Long> ids = candidates.stream().map(RecipeCandidate::id).collect(Collectors.toSet());
+        MIN_CATEGORY_SIZE.forEach((category, minSize) -> {
+            long shortage = minSize - candidates.stream().filter(candidate -> category.equals(candidate.category())).count();
+            if (shortage <= 0) {
+                return;
+            }
+            recipeVectorRepository.findByCategory(vector, category, minSize + candidates.size()).stream()
+                    .filter(candidate -> ids.add(candidate.id()))
+                    .limit(shortage)
+                    .forEach(candidates::add);
+        });
+
+        return candidates;
 
     }
 
