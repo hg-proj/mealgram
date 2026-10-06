@@ -85,7 +85,7 @@ candidates[] 항목
 | --- | --- |
 | style | 식단 스타일 이름 |
 | reason | 한 줄 설명 |
-| recipes[] | 식단에 들어간 레시피 목록. 각 항목은 id, name, category, imageUrl |
+| recipes[] | 식단에 들어간 레시피 목록. 각 항목은 id, name, category, imageUrl(없으면 null) |
 
 에러
 - 404 조건에 맞는 레시피가 없음(레시피 자체가 하나도 없을 때)
@@ -99,7 +99,9 @@ candidates[] 항목
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /recipes/{id} | 레시피 상세 + 부족 재료 | - | 경로변수 | 200<br>id<br>name<br>category<br>cookingMethod (조리방법)<br>calorie (칼로리)<br>carbohydrate (탄수화물)<br>protein (단백질)<br>fat (지방)<br>sodium (나트륨)<br>cookingSteps (조리단계)<br>imageUrl<br>missingIngredients[] (장보기 리스트, 양념 제외)<br>seasonings[] (필요한 양념) |
+| GET | /recipes/{id} | 레시피 상세 + 부족 재료 | - | 경로변수 | 200<br>id<br>name<br>category<br>cookingMethod (조리방법)<br>calorie (칼로리)<br>carbohydrate (탄수화물)<br>protein (단백질)<br>fat (지방)<br>sodium (나트륨)<br>cookingSteps (조리단계)<br>imageUrl (없으면 null, 프론트에서 기본 이미지 표시)<br>missingIngredients[] (장보기 리스트, 양념 제외)<br>seasonings[] (필요한 양념) |
+
+calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않은 레시피에서는 null(영양 정보 없음). 영양 값은 유사한 표준 음식 기준의 추정치라 정확하지 않을 수 있음
 
 ### 저장식단
 마이페이지 - 내 식단
