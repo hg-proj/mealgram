@@ -72,7 +72,7 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| POST | /meals | 식단 추천 요청 | requiredId<br>(내 재료 중 필수재료, 우선 필터)<br>subIds[]<br>(내 재료 중 서브재료, 랭킹 가중치)<br>ingredientId<br>(주재료, 우선 필터)<br>goal<br>genre | body | 201<br>id<br>relaxed (조건을 완화했는지)<br>candidates[] (추천 식단 후보 목록) |
+| POST | /meals | 식단 추천 요청 | requiredId<br>(내 재료 중 필수재료, 우선 필터)<br>subIds[]<br>(내 재료 중 서브재료, 랭킹 가중치)<br>ingredientId<br>(주재료, 우선 필터)<br>goal<br>(다이어트, 벌크업, 유지 중 하나. 다이어트는 하루 목표 열량 -500kcal, 벌크업은 +300kcal, 그 외와 비어 있으면 가감 없음)<br>genre | body | 201<br>id<br>relaxed (조건을 완화했는지)<br>candidates[] (추천 식단 후보 목록, 항상 3개) |
 | GET | /meals/{id} | 특정 추천 결과 다시 조회 | - | 경로변수 | 200<br>id<br>relaxed (조건 완화 여부)<br>candidates[] |
 
 모든 요청 값은 선택. 아무것도 보내지 않으면 랜덤 후보에서 추천
@@ -85,7 +85,8 @@ candidates[] 항목
 | --- | --- |
 | style | 식단 스타일 이름 |
 | reason | 한 줄 설명 |
-| recipes[] | 식단에 들어간 레시피 목록. 각 항목은 id, name, category, imageUrl(없으면 null) |
+| recipes[] | 식단에 들어간 레시피 목록. 각 항목은 id, name, category, imageUrl(없으면 null), portion(분량 배수, 목표 열량에 맞춰 0.5~1.2) |
+| nutrition | 영양 합계와 검증 결과. calorie, carbohydrate, protein, fat(합계), carbohydrateRatio, proteinRatio, fatRatio(에너지 비율 %), targetCalorie(한 끼 목표 열량), verified(검증 여부), passed(모든 기준 만족 여부), issues[](기준에서 벗어난 점). 영양 정보가 없는 요리가 있으면 합계와 비율은 null, verified는 false. 프론트는 passed로 판정하지 않고 숫자와 비율을 목표와 비교해 보여 줌. 기준은 NUTRITION.md |
 
 에러
 - 404 조건에 맞는 레시피가 없음(레시피 자체가 하나도 없을 때)
