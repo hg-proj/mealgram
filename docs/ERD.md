@@ -188,14 +188,14 @@ erDiagram
 | id | BIGINT | PK |
 | name (레시피명) | VARCHAR(50) | NOT NULL, 중복허용 |
 | category (카테고리) | VARCHAR(20) | NOT NULL |
-| cooking_method (조리방법) | VARCHAR(20) | NOT NULL |
-| calorie (칼로리) | DECIMAL | NOT NULL |
-| carbohydrate (탄수화물) | DECIMAL | NOT NULL |
-| protein (단백질) | DECIMAL | NOT NULL |
-| fat (지방) | DECIMAL | NOT NULL |
-| sodium (나트륨) | DECIMAL | NOT NULL |
+| cooking_method (조리방법) | VARCHAR(20) | NOT NULL, 레시피 원본의 음식분류(볶음, 구이, 국 등) |
+| calorie (칼로리) | DECIMAL | nullable, 영양 정보가 없는 레시피는 NULL |
+| carbohydrate (탄수화물) | DECIMAL | nullable |
+| protein (단백질) | DECIMAL | nullable |
+| fat (지방) | DECIMAL | nullable |
+| sodium (나트륨) | DECIMAL | nullable |
 | cooking_steps (조리단계) | TEXT | NOT NULL |
-| image_url (이미지url) | VARCHAR(255) | nullable |
+| image_url (이미지url) | VARCHAR(255) | nullable, 지금 레시피 데이터에는 이미지가 없어 모두 NULL |
 | embedding (임베딩 벡터) | VECTOR(1536) | nullable |
 | ingredient_raw_text (원본 재료 텍스트) | TEXT | NOT NULL |
 

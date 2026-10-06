@@ -37,19 +37,14 @@ public class Recipe {
     @Column(nullable=false, length=20)
     private String cookingMethod;
 
-    @Column(nullable=false)
     private BigDecimal calorie;
 
-    @Column(nullable=false)
     private BigDecimal carbohydrate;
 
-    @Column(nullable=false)
     private BigDecimal protein;
 
-    @Column(nullable=false)
     private BigDecimal fat;
 
-    @Column(nullable=false)
     private BigDecimal sodium;
 
     @Column(nullable=false, columnDefinition="TEXT")
