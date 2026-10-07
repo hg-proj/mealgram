@@ -72,6 +72,30 @@ public class Member {
     private LocalDateTime updatedAt;
 
 
+    public void updateProfile(String nickname, Integer age, Gender gender, BigDecimal height, BigDecimal weight,
+                              ActivityLevel activityLevel) {
+
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        if (age != null) {
+            this.age = age;
+        }
+        if (gender != null) {
+            this.gender = gender;
+        }
+        if (height != null) {
+            this.height = height;
+        }
+        if (weight != null) {
+            this.weight = weight;
+        }
+        if (activityLevel != null) {
+            this.activityLevel = activityLevel;
+        }
+
+    }
+
     // enum ------
     public enum Gender {MALE, FEMALE}
 
