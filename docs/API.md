@@ -62,7 +62,7 @@
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
 | GET | /ingredients | 전체 재료 검색(자동완성) | keyword<br>page, size | 쿼리 | 200<br>id<br>name |
-| GET | /members/me/ingredients | 내 재료 목록 | page, size | 쿼리 | 200<br>id<br>name |
+| GET | /members/me/ingredients | 내 재료 목록 | page, size | 쿼리 | 200<br>id (내 재료 번호, 삭제할 때 사용)<br>ingredientId (재료 id, 식단 추천 요청에 사용)<br>name |
 | POST | /members/me/ingredients | 내 재료 등록 | ingredientId* | body | 201<br>id |
 | DELETE | /members/me/ingredients/{id} | 내 재료 삭제 | - | 경로변수 | 204 (다른 회원 소유 id면 404) |
 
