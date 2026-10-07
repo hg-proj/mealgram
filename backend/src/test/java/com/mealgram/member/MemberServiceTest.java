@@ -3,6 +3,7 @@ package com.mealgram.member;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -73,6 +74,26 @@ class MemberServiceTest {
         assertThrows(BusinessException.class, () -> memberService.get(2L));
         assertThrows(BusinessException.class,
                 () -> memberService.update(2L, new MemberUpdateRequest("새이름", null, null, null, null, null)));
+
+    }
+
+    @Test
+    @DisplayName("회원탈퇴하면 회원을 삭제한다.")
+    void deletesMember() {
+
+        memberService.delete(1L);
+
+        verify(memberRepository).delete(member);
+
+    }
+
+    @Test
+    @DisplayName("없는 회원은 탈퇴할 수 없다.")
+    void failsToDeleteMissingMember() {
+
+        when(memberRepository.findById(3L)).thenReturn(Optional.empty());
+
+        assertThrows(BusinessException.class, () -> memberService.delete(3L));
 
     }
 

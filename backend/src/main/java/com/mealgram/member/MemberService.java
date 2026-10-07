@@ -8,7 +8,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.member.dto.MemberResponse;
 import com.mealgram.member.dto.MemberUpdateRequest;
 
-// 내정보 조회, 수정 서비스
+// 내정보 조회, 수정, 회원탈퇴 서비스
 
 @Service
 public class MemberService {
@@ -34,6 +34,13 @@ public class MemberService {
                 request.weight(), request.activityLevel());
 
         return MemberResponse.from(member);
+
+    }
+
+    @Transactional
+    public void delete(Long memberId) {
+
+        memberRepository.delete(find(memberId));
 
     }
 
