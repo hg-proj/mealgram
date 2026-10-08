@@ -44,6 +44,10 @@
 | POST | /auth/refresh | accessToken 재발급 | refreshToken* | body | 200<br>accessToken |
 | POST | /auth/logout | 로그아웃, refreshToken 무효화 | refreshToken* | body | 204 |
 
+토큰 규칙
+- accessToken은 30분, refreshToken은 14일
+- accessToken으로만 API를 호출할 수 있고 refreshToken으로 API를 호출하면 401
+
 
 ### 회원
 회원탈퇴, 마이페이지 - 내정보
