@@ -29,7 +29,7 @@ public class JwtTokenFilter extends OncePerRequestFilter{
     throws ServletException, IOException {
         String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null && jwtTokenProvider.isAccessToken(token)) {
             Long memberId = jwtTokenProvider.getMemberId(token);
         
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(memberId, null, List.of());
