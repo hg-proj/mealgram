@@ -114,6 +114,11 @@ calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않
 | POST | /saved-meals | 식단 북마크 저장 | recipeId* | body | 201<br>id |
 | DELETE | /saved-meals/{id} | 북마크 삭제 | - | 경로변수 | 204 |
 
+에러
+- 404 없는 레시피를 저장하려는 경우
+- 409 이미 저장한 레시피(같은 회원은 같은 레시피를 한 번만 저장)
+- 404 없는 저장식단이거나 다른 회원의 저장식단을 삭제하려는 경우
+
 ---
 
 ## 요청 데이터 전달 방식
