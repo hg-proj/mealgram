@@ -11,7 +11,6 @@
     - [member (회원)](#member-회원)
     - [member\_ingredient (회원 재료)](#member_ingredient-회원-재료)
     - [member\_saved\_meal (회원 저장식단)](#member_saved_meal-회원-저장식단)
-    - [member\_saved\_meal\_recipe (회원 저장식단 레시피)](#member_saved_meal_recipe-회원-저장식단-레시피)
   - [레시피](#레시피)
     - [recipe (레시피)](#recipe-레시피)
     - [ingredient (재료)](#ingredient-재료)
@@ -24,8 +23,7 @@
 erDiagram
     member ||--o{ member_ingredient : has
     member ||--o{ member_saved_meal : saves
-    member_saved_meal ||--o{ member_saved_meal_recipe : contains
-    recipe ||--o{ member_saved_meal_recipe : included_in
+    recipe ||--o{ member_saved_meal : included_in
     recipe ||--o{ recipe_ingredient : has
     ingredient ||--o{ recipe_ingredient : used_in
 ```
@@ -43,10 +41,8 @@ erDiagram
     member ||--o{ member_ingredient : places 
     %% 회원 - 회원저장식단: 1:N
     member ||--o{ member_saved_meal : places 
-    %% 회원저장식단 - 회원저장식단레시피: 1:N
-    member_saved_meal ||--o{ member_saved_meal_recipe : places
-    %% 레시피 - 회원저장식단레시피: 1:N
-    recipe ||--o{ member_saved_meal_recipe : places
+    %% 레시피 - 회원저장식단: 1:N
+    recipe ||--o{ member_saved_meal : places
     %% 레시피 - 레시피재료: 1:N 
     recipe ||--o{ recipe_ingredient : places
     %% 재료 - 레시피재료: 1:N
@@ -86,13 +82,8 @@ erDiagram
     member_saved_meal {
         BIGINT id PK
         BIGINT member_id FK 
-        TIMESTAMP created_at 
-    }
-
-    member_saved_meal_recipe {
-        BIGINT id PK
-        BIGINT member_saved_meal_id FK 
         BIGINT recipe_id FK 
+        TIMESTAMP created_at 
     }
 
     %% 레시피 ====
@@ -163,19 +154,16 @@ erDiagram
 
 ### member_saved_meal (회원 저장식단)
 
+레시피 하나를 저장하는 북마크. API 명세(recipeId로 저장, 목록은 id, recipeId, name)에 맞춰 식단 단위가 아니라 레시피 단위로 저장
+
 | 컬럼 | 타입 | 제약 |
 | --- | --- | --- |
 | id | BIGINT | PK |
-| member_id (회원id) | BIGINT | FK → member.id, INDEX, ON DELETE CASCADE |
+| member_id (회원id) | BIGINT | FK → member.id, ON DELETE CASCADE |
+| recipe_id (레시피id) | BIGINT | FK → recipe.id, INDEX, ON DELETE RESTRICT |
 | created_at (저장일시) | TIMESTAMP | NOT NULL |
 
-### member_saved_meal_recipe (회원 저장식단 레시피)
-
-| 컬럼 | 타입 | 제약 |
-| --- | --- | --- |
-| id | BIGINT | PK |
-| member_saved_meal_id (회원 저장 식단id) | BIGINT | FK → member_saved_meal.id, ON DELETE CASCADE |
-| recipe_id (레시피id) | BIGINT | FK → recipe.id, UNIQUE(member_saved_meal_id, recipe_id), INDEX, ON DELETE RESTRICT |
+UNIQUE(member_id, recipe_id): 같은 회원이 같은 레시피를 두 번 저장할 수 없음
 
 ---
 
