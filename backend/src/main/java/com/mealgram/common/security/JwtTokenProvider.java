@@ -20,26 +20,30 @@ public class JwtTokenProvider {
     
     private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 30; // 30분
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 14; // 14일
+    private static final String TYPE_CLAIM = "type";
+    private static final String ACCESS_TYPE = "access";
+    private static final String REFRESH_TYPE = "refresh";
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secret) { 
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
 
     public String generateAccessToken(Long memberId) {
-        return generateToken(memberId, ACCESS_TOKEN_EXPIRATION);
+        return generateToken(memberId, ACCESS_TOKEN_EXPIRATION, ACCESS_TYPE);
     }
 
     public String generateRefreshToken(Long memberId) {
-        return generateToken(memberId, REFRESH_TOKEN_EXPIRATION);
+        return generateToken(memberId, REFRESH_TOKEN_EXPIRATION, REFRESH_TYPE);
     }
 
-    private String generateToken(Long memberId, long expiration) {
+    private String generateToken(Long memberId, long expiration, String type) {
 
         Date now = new Date();
         Date expiredAt = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(String.valueOf(memberId))
+                .claim(TYPE_CLAIM, type)
                 .issuedAt(now)
                 .expiration(expiredAt)
                 .signWith(key)
@@ -56,6 +60,27 @@ public class JwtTokenProvider {
                             .getSubject();
         
         return Long.valueOf(subject);
+    }
+
+    public boolean isAccessToken(String token) {
+        return hasType(token, ACCESS_TYPE);
+    }
+
+    private boolean hasType(String token, String type) {
+
+        try {
+            String actual = Jwts.parser()
+                                .verifyWith(key)
+                                .build()
+                                .parseSignedClaims(token)
+                                .getPayload()
+                                .get(TYPE_CLAIM, String.class);
+
+            return type.equals(actual);
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean validateToken(String token) {
