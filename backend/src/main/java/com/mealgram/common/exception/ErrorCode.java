@@ -19,6 +19,8 @@ public enum ErrorCode {
     RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "레시피를 찾을 수 없습니다."),
     RECIPE_CANDIDATE_NOT_FOUND(HttpStatus.NOT_FOUND, "조건에 맞는 레시피가 없습니다."),
     MEAL_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 결과를 찾을 수 없습니다."),
+    DUPLICATE_SAVED_MEAL(HttpStatus.CONFLICT, "이미 저장한 식단입니다."),
+    SAVED_MEAL_NOT_FOUND(HttpStatus.NOT_FOUND, "저장한 식단을 찾을 수 없습니다."),
     MEAL_GENERATION_FAILED(HttpStatus.BAD_GATEWAY, "식단 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus httpStatus;
