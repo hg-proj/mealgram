@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -15,12 +17,16 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
+import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
+import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
+import com.mealgram.member.dto.ForgotPasswordRequest;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
 import com.mealgram.member.dto.LogoutRequest;
@@ -35,6 +41,8 @@ class AuthServiceTest {
     private MemberRepository memberRepository;
     private PasswordEncoder passwordEncoder;
     private RefreshTokenStore refreshTokenStore;
+    private PasswordResetTokenStore passwordResetTokenStore;
+    private PasswordResetMailer passwordResetMailer;
     private JwtTokenProvider provider;
     private AuthService authService;
 
@@ -45,7 +53,10 @@ class AuthServiceTest {
         passwordEncoder = mock(PasswordEncoder.class);
         refreshTokenStore = mock(RefreshTokenStore.class);
         provider = new JwtTokenProvider(Encoders.BASE64.encode(Jwts.SIG.HS256.key().build().getEncoded()));
-        authService = new AuthService(memberRepository, passwordEncoder, provider, refreshTokenStore);
+        passwordResetTokenStore = mock(PasswordResetTokenStore.class);
+        passwordResetMailer = mock(PasswordResetMailer.class);
+        authService = new AuthService(memberRepository, passwordEncoder, provider, refreshTokenStore,
+                passwordResetTokenStore, passwordResetMailer);
 
     }
 
@@ -165,6 +176,70 @@ class AuthServiceTest {
 
         verify(refreshTokenStore, never()).delete(anyLong());
         verify(memberRepository, never()).findById(any());
+
+    }
+
+    @Test
+    @DisplayName("가입된 이메일이면 재설정 토큰을 보관하고 메일을 보낸다.")
+    void savesTokenAndSendsMail() {
+
+        Member member = Member.builder().id(1L).email("a@example.com").build();
+        when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
+        when(passwordResetTokenStore.acquireCooldown(1L)).thenReturn(true);
+
+        authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
+
+        ArgumentCaptor<String> saved = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+        verify(passwordResetTokenStore).save(eq(1L), saved.capture());
+        verify(passwordResetMailer).send(eq("a@example.com"), sent.capture());
+        assertEquals(saved.getValue(), sent.getValue());
+        assertEquals(43, saved.getValue().length());
+
+    }
+
+    @Test
+    @DisplayName("요청할 때마다 다른 토큰을 만든다.")
+    void createsDifferentTokens() {
+
+        Member member = Member.builder().id(1L).email("a@example.com").build();
+        when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
+        when(passwordResetTokenStore.acquireCooldown(1L)).thenReturn(true);
+
+        authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
+        authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
+
+        ArgumentCaptor<String> tokens = ArgumentCaptor.forClass(String.class);
+        verify(passwordResetTokenStore, org.mockito.Mockito.times(2)).save(eq(1L), tokens.capture());
+        assertTrue(!tokens.getAllValues().get(0).equals(tokens.getAllValues().get(1)));
+
+    }
+
+    @Test
+    @DisplayName("가입되지 않은 이메일이어도 오류 없이 아무것도 하지 않는다.")
+    void ignoresUnknownEmail() {
+
+        when(memberRepository.findByEmail("none@example.com")).thenReturn(Optional.empty());
+
+        authService.forgotPassword(new ForgotPasswordRequest("none@example.com"));
+
+        verify(passwordResetTokenStore, never()).save(anyLong(), anyString());
+        verify(passwordResetMailer, never()).send(anyString(), anyString());
+
+    }
+
+    @Test
+    @DisplayName("방금 요청한 회원에게는 메일을 다시 보내지 않는다.")
+    void skipsDuringCooldown() {
+
+        Member member = Member.builder().id(1L).email("a@example.com").build();
+        when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
+        when(passwordResetTokenStore.acquireCooldown(1L)).thenReturn(false);
+
+        authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
+
+        verify(passwordResetTokenStore, never()).save(anyLong(), anyString());
+        verify(passwordResetMailer, never()).send(anyString(), anyString());
 
     }
 

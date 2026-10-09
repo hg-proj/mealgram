@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mealgram.member.dto.ForgotPasswordRequest;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
 import com.mealgram.member.dto.LogoutRequest;
@@ -17,7 +18,7 @@ import com.mealgram.member.dto.SignupResponse;
 
 import jakarta.validation.Valid;
 
-// 회원가입, 로그인, 토큰 재발급, 로그아웃 API 엔드포인트
+// 회원가입, 로그인, 토큰 재발급, 로그아웃, 비밀번호 재설정 API 엔드포인트
 
 @RestController 
 @RequestMapping("/auth")
@@ -60,6 +61,15 @@ public class AuthController {
         authService.logout(request);
 
         return ResponseEntity.noContent().build();
+
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+
+        authService.forgotPassword(request);
+
+        return ResponseEntity.ok().build();
 
     }
 
