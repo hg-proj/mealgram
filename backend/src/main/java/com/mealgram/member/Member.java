@@ -72,6 +72,12 @@ public class Member {
     private LocalDateTime updatedAt;
 
 
+    public void changePassword(String encodedPassword) {
+
+        this.password = encodedPassword;
+
+    }
+
     public void updateProfile(String nickname, Integer age, Gender gender, BigDecimal height, BigDecimal weight,
                               ActivityLevel activityLevel) {
 
