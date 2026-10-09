@@ -32,6 +32,7 @@ import com.mealgram.member.dto.LoginResponse;
 import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
+import com.mealgram.member.dto.ResetPasswordRequest;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Encoders;
@@ -240,6 +241,51 @@ class AuthServiceTest {
 
         verify(passwordResetTokenStore, never()).save(anyLong(), anyString());
         verify(passwordResetMailer, never()).send(anyString(), anyString());
+
+    }
+
+    @Test
+    @DisplayName("유효한 토큰이면 새 비밀번호로 바꾸고 refreshToken을 지운다.")
+    void resetsPassword() {
+
+        Member member = Member.builder().id(1L).password("old").build();
+        when(passwordResetTokenStore.consume("token")).thenReturn(Optional.of(1L));
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(passwordEncoder.encode("newPassword1")).thenReturn("ENCODED");
+
+        authService.resetPassword(new ResetPasswordRequest("token", "newPassword1"));
+
+        assertEquals("ENCODED", member.getPassword());
+        verify(memberRepository).save(member);
+        verify(refreshTokenStore).delete(1L);
+
+    }
+
+    @Test
+    @DisplayName("유효하지 않거나 이미 쓴 토큰이면 비밀번호를 바꿀 수 없다.")
+    void rejectsInvalidResetToken() {
+
+        when(passwordResetTokenStore.consume("used")).thenReturn(Optional.empty());
+
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> authService.resetPassword(new ResetPasswordRequest("used", "newPassword1")));
+
+        assertEquals(ErrorCode.INVALID_RESET_TOKEN, e.getErrorCode());
+        verify(memberRepository, never()).save(any());
+
+    }
+
+    @Test
+    @DisplayName("토큰의 회원이 탈퇴했으면 비밀번호를 바꿀 수 없다.")
+    void rejectsTokenOfDeletedMemberOnReset() {
+
+        when(passwordResetTokenStore.consume("token")).thenReturn(Optional.of(9L));
+        when(memberRepository.findById(9L)).thenReturn(Optional.empty());
+
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> authService.resetPassword(new ResetPasswordRequest("token", "newPassword1")));
+
+        assertEquals(ErrorCode.INVALID_RESET_TOKEN, e.getErrorCode());
 
     }
 

@@ -18,10 +18,11 @@ import com.mealgram.member.dto.LoginResponse;
 import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
+import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
 
-// 회원가입, 로그인, 토큰 재발급, 로그아웃, 비밀번호 재설정 메일 발송 처리 서비스
+// 회원가입, 로그인, 토큰 재발급, 로그아웃, 비밀번호 재설정 처리 서비스
 
 @Service
 public class AuthService {
@@ -121,6 +122,18 @@ public class AuthService {
             passwordResetTokenStore.save(member.getId(), token);
             passwordResetMailer.send(member.getEmail(), token);
         });
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+
+        Long memberId = passwordResetTokenStore.consume(request.token())
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RESET_TOKEN));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_RESET_TOKEN));
+
+        member.changePassword(passwordEncoder.encode(request.newPassword()));
+        memberRepository.save(member);
+        refreshTokenStore.delete(memberId);
     }
 
     private String generateResetToken() {

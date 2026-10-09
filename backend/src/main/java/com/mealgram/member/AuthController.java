@@ -13,6 +13,7 @@ import com.mealgram.member.dto.LoginResponse;
 import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
+import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
 
@@ -68,6 +69,15 @@ public class AuthController {
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
 
         authService.forgotPassword(request);
+
+        return ResponseEntity.ok().build();
+
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+
+        authService.resetPassword(request);
 
         return ResponseEntity.ok().build();
 
