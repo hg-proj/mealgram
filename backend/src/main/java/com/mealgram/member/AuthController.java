@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
+import com.mealgram.member.dto.LogoutRequest;
+import com.mealgram.member.dto.RefreshRequest;
+import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
 
 import jakarta.validation.Valid;
 
-// 회원가입/로그인 API 엔드포인트
+// 회원가입, 로그인, 토큰 재발급, 로그아웃 API 엔드포인트
 
 @RestController 
 @RequestMapping("/auth")
@@ -43,4 +46,21 @@ public class AuthController {
         return ResponseEntity.ok(response);
 
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+
+        return ResponseEntity.ok(authService.refresh(request));
+
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
+
+        authService.logout(request);
+
+        return ResponseEntity.noContent().build();
+
+    }
+
 }

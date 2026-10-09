@@ -62,8 +62,16 @@ public class JwtTokenProvider {
         return Long.valueOf(subject);
     }
 
+    public long getRefreshTokenExpiration() {
+        return REFRESH_TOKEN_EXPIRATION;
+    }
+
     public boolean isAccessToken(String token) {
         return hasType(token, ACCESS_TYPE);
+    }
+
+    public boolean isRefreshToken(String token) {
+        return hasType(token, REFRESH_TYPE);
     }
 
     private boolean hasType(String token, String type) {

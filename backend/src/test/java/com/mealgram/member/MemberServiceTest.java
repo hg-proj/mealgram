@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.mealgram.common.exception.BusinessException;
+import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.Member.ActivityLevel;
 import com.mealgram.member.Member.Gender;
 import com.mealgram.member.dto.MemberResponse;
@@ -22,6 +23,7 @@ import com.mealgram.member.dto.MemberUpdateRequest;
 class MemberServiceTest {
 
     private MemberRepository memberRepository;
+    private RefreshTokenStore refreshTokenStore;
     private MemberService memberService;
     private Member member;
 
@@ -29,7 +31,8 @@ class MemberServiceTest {
     void setUp() {
 
         memberRepository = mock(MemberRepository.class);
-        memberService = new MemberService(memberRepository);
+        refreshTokenStore = mock(RefreshTokenStore.class);
+        memberService = new MemberService(memberRepository, refreshTokenStore);
         member = Member.builder().nickname("한결").loginId("hangyeol01").email("test@example.com").age(30)
                 .gender(Gender.FEMALE).height(new BigDecimal("160")).weight(new BigDecimal("55"))
                 .activityLevel(ActivityLevel.LIGHT).build();
@@ -78,12 +81,13 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("회원탈퇴하면 회원을 삭제한다.")
+    @DisplayName("회원탈퇴하면 회원과 저장된 refreshToken을 삭제한다.")
     void deletesMember() {
 
         memberService.delete(1L);
 
         verify(memberRepository).delete(member);
+        verify(refreshTokenStore).delete(1L);
 
     }
 
