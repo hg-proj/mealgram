@@ -29,15 +29,17 @@ class JwtTokenProviderTest {
         String token = provider.generateAccessToken(1L);
 
         assertTrue(provider.isAccessToken(token));
+        assertFalse(provider.isRefreshToken(token));
 
     }
 
     @Test
-    @DisplayName("refreshToken은 accessToken으로 인정하지 않는다.")
-    void rejectsRefreshTokenAsAccess() {
+    @DisplayName("refreshToken은 refreshToken으로만 인정한다.")
+    void acceptsRefreshTokenOnlyAsRefresh() {
 
         String token = provider.generateRefreshToken(1L);
 
+        assertTrue(provider.isRefreshToken(token));
         assertFalse(provider.isAccessToken(token));
 
     }
@@ -58,7 +60,7 @@ class JwtTokenProviderTest {
         JwtTokenProvider other = new JwtTokenProvider(Encoders.BASE64.encode(Jwts.SIG.HS256.key().build().getEncoded()));
 
         assertFalse(provider.isAccessToken("abc.def.ghi"));
-        assertFalse(provider.isAccessToken(""));
+        assertFalse(provider.isRefreshToken(""));
         assertFalse(provider.isAccessToken(other.generateAccessToken(1L)));
 
     }
@@ -72,6 +74,7 @@ class JwtTokenProviderTest {
                         Encoders.BASE64.encode(new byte[32])))).compact();
 
         assertFalse(provider.isAccessToken(legacy));
+        assertFalse(provider.isRefreshToken(legacy));
 
     }
 
