@@ -3,7 +3,10 @@ package com.mealgram.member;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +23,7 @@ import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
+import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
 
@@ -132,6 +136,35 @@ class AuthServiceTest {
 
         assertEquals(ErrorCode.INVALID_REFRESH_TOKEN,
                 assertThrows(BusinessException.class, () -> authService.refresh(new RefreshRequest(refresh))).getErrorCode());
+
+    }
+
+    @Test
+    @DisplayName("로그아웃하면 보관된 refreshToken을 지운다.")
+    void deletesStoredTokenOnLogout() {
+
+        String refresh = provider.generateRefreshToken(1L);
+        stored(1L, refresh);
+
+        authService.logout(new LogoutRequest(refresh));
+
+        verify(refreshTokenStore).delete(1L);
+
+    }
+
+    @Test
+    @DisplayName("보관된 값과 다르거나 틀린 토큰으로 로그아웃해도 오류 없이 아무것도 지우지 않는다.")
+    void logoutWithInvalidTokenDoesNothing() {
+
+        String refresh = provider.generateRefreshToken(1L);
+        stored(1L, "교체된 토큰");
+
+        authService.logout(new LogoutRequest(refresh));
+        authService.logout(new LogoutRequest("broken"));
+        authService.logout(new LogoutRequest(provider.generateAccessToken(1L)));
+
+        verify(refreshTokenStore, never()).delete(anyLong());
+        verify(memberRepository, never()).findById(any());
 
     }
 

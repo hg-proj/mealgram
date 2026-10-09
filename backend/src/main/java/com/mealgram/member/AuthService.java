@@ -9,12 +9,13 @@ import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
+import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
 
-// 회원가입, 로그인, 토큰 재발급 처리 서비스
+// 회원가입, 로그인, 토큰 재발급, 로그아웃 처리 서비스
 
 @Service
 public class AuthService {
@@ -85,6 +86,14 @@ public class AuthService {
         }
 
         return new RefreshResponse(jwtTokenProvider.generateAccessToken(memberId));
+    }
+
+    public void logout(LogoutRequest request) {
+
+        Long memberId = findStoredMemberId(request.refreshToken());
+        if (memberId != null) {
+            refreshTokenStore.delete(memberId);
+        }
     }
 
     private Long findStoredMemberId(String refreshToken) {

@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
+import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.MemberResponse;
 import com.mealgram.member.dto.MemberUpdateRequest;
 
@@ -14,9 +15,11 @@ import com.mealgram.member.dto.MemberUpdateRequest;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final RefreshTokenStore refreshTokenStore;
 
-    public MemberService(MemberRepository memberRepository) {
+    public MemberService(MemberRepository memberRepository, RefreshTokenStore refreshTokenStore) {
         this.memberRepository = memberRepository;
+        this.refreshTokenStore = refreshTokenStore;
     }
 
     @Transactional(readOnly = true)
@@ -41,6 +44,7 @@ public class MemberService {
     public void delete(Long memberId) {
 
         memberRepository.delete(find(memberId));
+        refreshTokenStore.delete(memberId);
 
     }
 

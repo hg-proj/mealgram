@@ -46,9 +46,11 @@
 
 토큰 규칙
 - accessToken은 30분, refreshToken은 14일. refreshToken은 서버(Redis)에 회원당 하나만 보관하고 새로 로그인하면 이전 것은 쓸 수 없음(다른 기기에서 로그인하면 이전 기기는 재로그인 필요)
-- accessToken으로는 API만, refreshToken으로는 재발급만 가능(서로 바꿔 쓰면 401)
+- accessToken으로는 API만, refreshToken으로는 재발급과 로그아웃만 가능(서로 바꿔 쓰면 401)
 - 재발급(`/auth/refresh`)은 accessToken만 새로 주고 refreshToken은 그대로 유지
-- 재발급 실패(401 INVALID_REFRESH_TOKEN): 틀리거나 만료된 토큰, 다른 기기에서 새로 로그인한 경우, 탈퇴한 회원
+- 재발급 실패(401 INVALID_REFRESH_TOKEN): 틀리거나 만료된 토큰, 이미 로그아웃했거나 다른 기기에서 새로 로그인한 경우, 탈퇴한 회원
+- 로그아웃은 항상 204(이미 무효한 토큰이어도 오류 없음)
+- 회원탈퇴하면 보관된 refreshToken도 함께 삭제
 
 
 ### 회원
