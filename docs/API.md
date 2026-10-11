@@ -136,6 +136,19 @@ calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않
 
 ---
 
+## 공통 오류 형식
+
+모든 오류는 `{ "success": false, "error": { "code", "message" } }` 한 가지 모양
+
+| 상태 | code | 경우 |
+| --- | --- | --- |
+| 400 | INVALID_REQUEST | 본문이 깨졌거나 경로변수, 파라미터 형식이 틀림 |
+| 401 | UNAUTHORIZED | 토큰이 없거나 틀림 |
+| 404 | RESOURCE_NOT_FOUND | 없는 주소 |
+| 405 | METHOD_NOT_ALLOWED | 지원하지 않는 메서드 |
+| 415 | UNSUPPORTED_MEDIA_TYPE | Content-Type이 JSON이 아님 |
+| 500 | INTERNAL_SERVER_ERROR | 서버 오류(내용은 알려주지 않음) |
+
 ## CORS
 
 허용 출처는 서버의 FRONTEND_URL 환경변수(쉼표로 여러 개 가능, 기본 http://localhost:5173). 허용 헤더는 Authorization, Content-Type이고 응답의 Retry-After 헤더를 브라우저에서 읽을 수 있음
