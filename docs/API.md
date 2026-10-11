@@ -147,6 +147,7 @@ calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않
 | 404 | RESOURCE_NOT_FOUND | 없는 주소 |
 | 405 | METHOD_NOT_ALLOWED | 지원하지 않는 메서드 |
 | 415 | UNSUPPORTED_MEDIA_TYPE | Content-Type이 JSON이 아님 |
+| 500 | INTERNAL_SERVER_ERROR | 서버 오류(내용은 알려주지 않음) |
 
 ## CORS
 

@@ -16,8 +16,11 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.mealgram.common.response.ErrorResponse;
 import com.mealgram.common.response.ErrorResponse.FieldErrorDetail;
 
+import lombok.extern.slf4j.Slf4j;
+
 // 터진 예외를 잡아 응답 포맷으로 변환
 
+@Slf4j
 @RestControllerAdvice 
 public class GlobalExceptionHandler {
 
@@ -84,6 +87,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                         .status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getHttpStatus())
                         .body(ErrorResponse.of(ErrorCode.UNSUPPORTED_MEDIA_TYPE));
+
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
+
+        log.error("예상하지 못한 오류가 발생했습니다.", e);
+
+        return ResponseEntity
+                        .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
 
     }
 

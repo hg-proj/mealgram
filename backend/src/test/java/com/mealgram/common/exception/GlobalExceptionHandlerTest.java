@@ -80,6 +80,17 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("예상하지 못한 예외는 500 공통 오류 형식으로 응답하고 예외 내용을 숨긴다.")
+    void unexpectedException() {
+
+        ResponseEntity<ErrorResponse> response = handler.handleUnexpected(new IllegalStateException("내부 정보 SELECT * FROM member"));
+
+        assertError(response, HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR);
+        assertFalse(response.getBody().error().message().contains("SELECT"));
+
+    }
+
+    @Test
     @DisplayName("업무 예외는 지정한 상태와 코드로 응답한다.")
     void businessException() {
 
