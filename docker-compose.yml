@@ -18,7 +18,7 @@ services:
       - pgdata:/var/lib/postgresql/data      # 공식 고정 경로
 
     healthcheck:                             # 컨테이너 연결 가능 여부 확인
-      test: ["CMD-SHELL", "pg_isready -U mealgram"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mealgram"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -38,23 +38,31 @@ services:
       timeout: 3s
       retries: 5
 
-  ### 배포 직전 주석 해제 ###
+  # backend
+  backend:
 
-  # # backend
+    build: ./backend
+    container_name: mealgram-backend
 
-  # backend:
+    ports:
+      - "8080:8080"
 
-  #   build: ./backend
-  #   container_name: mealgram-backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/mealgram
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-1234}
+      SPRING_DATA_REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      RECIPE_IMPORT_ENABLED: ${RECIPE_IMPORT_ENABLED:-false}
+      RECIPE_EMBEDDING_ENABLED: ${RECIPE_EMBEDDING_ENABLED:-false}
 
-  #   ports:
-  #     - "8080:8080"
-
-  #   depends_on:                         # 서비스 실행 순서 지정
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+    depends_on:                         # 서비스 실행 순서 지정
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 # volume 
 volumes:
