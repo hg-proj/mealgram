@@ -4,9 +4,14 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.mealgram.common.response.ErrorResponse;
 import com.mealgram.common.response.ErrorResponse.FieldErrorDetail;
@@ -45,5 +50,41 @@ public class GlobalExceptionHandler {
                         .status(ErrorCode.INVALID_REQUEST.getHttpStatus())
                         .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST));
     }  
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidParameter(Exception e) {
+
+        return ResponseEntity
+                        .status(ErrorCode.INVALID_REQUEST.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST));
+
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException e) {
+
+        return ResponseEntity
+                        .status(ErrorCode.RESOURCE_NOT_FOUND.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.RESOURCE_NOT_FOUND));
+
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+
+        return ResponseEntity
+                        .status(ErrorCode.METHOD_NOT_ALLOWED.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED));
+
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+
+        return ResponseEntity
+                        .status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.UNSUPPORTED_MEDIA_TYPE));
+
+    }
 
 }
