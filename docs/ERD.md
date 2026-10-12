@@ -133,11 +133,11 @@ erDiagram
 | id | BIGINT | PK |
 | nickname (닉네임) | VARCHAR(10) | NOT NULL, 2~10자, 특수문자 허용, 중복허용 |
 | login_id (아이디) | VARCHAR(20) | NOT NULL, UNIQUE, 영문 소문자+숫자 6~20자 |
-| password (비밀번호) | VARCHAR(255) | NOT NULL, 해시 저장(BCrypt), 원문 규칙: 8~20자 영문+숫자+특수문자 중 2종류 이상 |
-| age (나이) | INT | nullable, 마이페이지에서 입력/수정 가능 |
+| password (비밀번호) | VARCHAR(255) | NOT NULL, 해시 저장(BCrypt), 원문 규칙: 8~20자, 공백 불가, 영문+숫자+특수문자 중 3종류 이상이면 8자부터, 2종류면 10자 이상(KISA 패스워드 작성 규칙) |
+| age (나이) | INT | nullable, 3~120, 마이페이지에서 입력/수정 가능 |
 | gender (성별) | VARCHAR(10) | nullable, Java enum Gender(MALE/FEMALE) |
-| height (키) | DECIMAL | nullable |
-| weight (몸무게) | DECIMAL | nullable |
+| height (키) | DECIMAL | nullable, 50~250cm |
+| weight (몸무게) | DECIMAL | nullable, 10~300kg |
 | activity_level (활동량) | VARCHAR(20) | nullable, Java enum ActivityLevel(비활동적/저활동적/활동적/매우활동적) |
 | email (이메일) | VARCHAR | NOT NULL, UNIQUE |
 | created_at (가입일시) | TIMESTAMP | NOT NULL |
