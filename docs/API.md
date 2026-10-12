@@ -136,6 +136,14 @@ calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않
 
 ---
 
+## 입력 규칙
+
+- nickname 2~10자(수정할 때 공백만 입력 불가), loginId 영문 소문자와 숫자 6~20자
+- password 8~20자, 공백 불가. 영문, 숫자, 특수문자 중 3종류 이상이면 8자부터, 2종류면 10자 이상(1종류는 불가). 가입과 비밀번호 재설정에 같이 적용
+- age 3~120, height 50~250(cm), weight 10~300(kg). 가입과 수정에 같이 적용(보내지 않으면 검사하지 않음)
+- goal은 다이어트, 벌크업, 유지 중 하나(비워 두는 것은 가능). 다른 값은 400
+- 규칙에 어긋나면 400 VALIDATION_FAILED와 fieldErrors
+
 ## 공통 오류 형식
 
 모든 오류는 `{ "success": false, "error": { "code", "message" } }` 한 가지 모양
