@@ -2,6 +2,7 @@ package com.mealgram.ingredient;
 
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,7 +72,11 @@ public class IngredientService {
                 .ingredient(ingredient)
                 .build();
 
-        memberIngredientRepository.save(memberIngredient);
+        try {
+            memberIngredientRepository.save(memberIngredient);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.DUPLICATE_MY_INGREDIENT);
+        }
 
         return new MyIngredientCreateResponse(memberIngredient.getId());
     }
