@@ -40,6 +40,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class MealService {
 
     private static final String KEY_PREFIX = "meal:";
+    private static final String OWNER_KEY_PREFIX = "meal:owner:";
     private static final Duration RESULT_TTL = Duration.ofHours(24);
     private static final int MAX_ATTEMPTS = 2;
     private static final String EXTRA_STYLE = "추가 식단";
@@ -81,13 +82,19 @@ public class MealService {
 
         MealResponse response = new MealResponse(UUID.randomUUID().toString(), found.relaxed(),
                 generate(candidates, goal, genre, targetCalorie(memberId, goal)));
+        redisTemplate.opsForValue().set(OWNER_KEY_PREFIX + response.id(), String.valueOf(memberId), RESULT_TTL);
         redisTemplate.opsForValue().set(KEY_PREFIX + response.id(), jsonMapper.writeValueAsString(response), RESULT_TTL);
 
         return response;
 
     }
 
-    public MealResponse get(String id) {
+    public MealResponse get(Long memberId, String id) {
+
+        String owner = redisTemplate.opsForValue().get(OWNER_KEY_PREFIX + id);
+        if (owner == null || !owner.equals(String.valueOf(memberId))) {
+            throw new BusinessException(ErrorCode.MEAL_NOT_FOUND);
+        }
 
         String json = redisTemplate.opsForValue().get(KEY_PREFIX + id);
         if (json == null) {

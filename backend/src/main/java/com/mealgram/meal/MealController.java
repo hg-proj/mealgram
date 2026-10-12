@@ -39,9 +39,9 @@ public class MealController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MealResponse> get(@PathVariable String id) {
+    public ResponseEntity<MealResponse> get(@PathVariable String id, @AuthenticationPrincipal Long memberId) {
 
-        return ResponseEntity.ok(mealService.get(id));
+        return ResponseEntity.ok(mealService.get(memberId, id));
 
     }
 
