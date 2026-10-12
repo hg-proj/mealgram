@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.mealgram.meal.dto.MealRequest;
 import com.mealgram.member.dto.MemberUpdateRequest;
 import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
@@ -133,6 +134,19 @@ class MemberInputValidationTest {
 
         assertEquals(Set.of("newPassword"), fields(new ResetPasswordRequest("token", "aaaaaaaaaa")));
         assertTrue(fields(new ResetPasswordRequest("token", "password12!")).isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("식단 추천: 목표는 다이어트, 벌크업, 유지 중 하나이거나 비어 있어야 한다.")
+    void mealGoal() {
+
+        assertTrue(fields(new MealRequest(null, null, null, "다이어트", null)).isEmpty());
+        assertTrue(fields(new MealRequest(null, null, null, "벌크업", "한식")).isEmpty());
+        assertTrue(fields(new MealRequest(null, null, null, "유지", null)).isEmpty());
+        assertTrue(fields(new MealRequest(null, null, null, null, null)).isEmpty());
+        assertEquals(Set.of("goal"), fields(new MealRequest(null, null, null, "아무거나", null)));
+        assertEquals(Set.of("goal"), fields(new MealRequest(null, null, null, "", null)));
 
     }
 
