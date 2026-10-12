@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
+import com.mealgram.common.embedding.EmbeddingCache;
 import com.mealgram.common.embedding.EmbeddingClient;
 import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
@@ -34,13 +35,16 @@ public class RecipeSearchService {
     private final RecipeVectorRepository recipeVectorRepository;
     private final IngredientRepository ingredientRepository;
     private final EmbeddingClient embeddingClient;
+    private final EmbeddingCache embeddingCache;
 
     public RecipeSearchService(RecipeVectorRepository recipeVectorRepository,
                                IngredientRepository ingredientRepository,
-                               EmbeddingClient embeddingClient) {
+                               EmbeddingClient embeddingClient,
+                               EmbeddingCache embeddingCache) {
         this.recipeVectorRepository = recipeVectorRepository;
         this.ingredientRepository = ingredientRepository;
         this.embeddingClient = embeddingClient;
+        this.embeddingCache = embeddingCache;
     }
 
     public RecipeSearchResult search(Long requiredId,
@@ -67,7 +71,7 @@ public class RecipeSearchService {
             return new RecipeSearchResult(fillCategories(random, null), false);
         }
 
-        float[] vector = embeddingClient.embed(List.of(queryText)).get(0);
+        float[] vector = embed(queryText);
 
         List<RecipeCandidate> result = new ArrayList<>();
         Set<Long> addedIds = new HashSet<>();
@@ -90,6 +94,16 @@ public class RecipeSearchService {
         boolean relaxed = result.stream().anyMatch(candidate -> !candidate.matched());
 
         return new RecipeSearchResult(fillCategories(result, vector), relaxed);
+
+    }
+
+    private float[] embed(String queryText) {
+
+        return embeddingCache.find(queryText).orElseGet(() -> {
+            float[] vector = embeddingClient.embed(List.of(queryText)).get(0);
+            embeddingCache.save(queryText, vector);
+            return vector;
+        });
 
     }
 
