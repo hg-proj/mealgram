@@ -13,10 +13,10 @@ import java.util.stream.IntStream;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 
 import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
+import com.mealgram.common.exception.ExternalApiException;
 import com.mealgram.common.llm.LlmClient;
 import com.mealgram.meal.dto.MealCandidate;
 import com.mealgram.meal.dto.MealRecipe;
@@ -31,11 +31,13 @@ import com.mealgram.recipe.RecipeSearchService;
 import com.mealgram.recipe.dto.RecipeCandidate;
 import com.mealgram.recipe.dto.RecipeSearchResult;
 
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 // 식단 추천 서비스
 
+@Slf4j
 @Service
 public class MealService {
 
@@ -74,6 +76,7 @@ public class MealService {
                                   String goal,
                                   String genre) {
 
+        long start = System.currentTimeMillis();
         RecipeSearchResult found = recipeSearchService.search(requiredId, subIds, mainIngredientId, goal, genre);
         List<RecipeCandidate> candidates = found.candidates();
         if (candidates.isEmpty()) {
@@ -84,6 +87,9 @@ public class MealService {
                 generate(candidates, goal, genre, targetCalorie(memberId, goal)));
         redisTemplate.opsForValue().set(OWNER_KEY_PREFIX + response.id(), String.valueOf(memberId), RESULT_TTL);
         redisTemplate.opsForValue().set(KEY_PREFIX + response.id(), jsonMapper.writeValueAsString(response), RESULT_TTL);
+
+        log.info("식단 추천 완료: 회원 {}, 후보 {}개, 조건 완화 {}, {}ms", memberId, candidates.size(), found.relaxed(),
+                System.currentTimeMillis() - start);
 
         return response;
 
@@ -158,7 +164,10 @@ public class MealService {
             LlmPlan plan = jsonMapper.readValue(content, LlmPlan.class);
 
             return plan.meals() == null ? List.of() : plan.meals();
-        } catch (RestClientException | JacksonException e) {
+        } catch (ExternalApiException e) {
+            return List.of();
+        } catch (JacksonException e) {
+            log.warn("LLM 응답을 읽지 못했습니다: {}", e.getClass().getSimpleName());
             return List.of();
         }
 

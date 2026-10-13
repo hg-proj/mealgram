@@ -157,6 +157,7 @@ calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않
 | 405 | METHOD_NOT_ALLOWED | 지원하지 않는 메서드 |
 | 415 | UNSUPPORTED_MEDIA_TYPE | Content-Type이 JSON이 아님 |
 | 500 | INTERNAL_SERVER_ERROR | 서버 오류(내용은 알려주지 않음) |
+| 502 | EXTERNAL_API_FAILED | 식단 추천에 쓰는 외부 서비스(OpenAI) 호출 실패(식단 생성 실패는 MEAL_GENERATION_FAILED) |
 
 ## CORS
 
