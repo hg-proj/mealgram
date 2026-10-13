@@ -2,6 +2,7 @@ package com.mealgram.member;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Locale;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,9 @@ public class AuthService {
             throw new BusinessException(ErrorCode.DUPLICATE_LOGIN_ID);
         }
 
-        if (memberRepository.existsByEmail(request.email())) {
+        String email = normalizeEmail(request.email());
+
+        if (memberRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
@@ -69,7 +72,7 @@ public class AuthService {
                 .height(request.height())
                 .weight(request.weight())
                 .activityLevel(request.activityLevel())
-                .email(request.email())
+                .email(email)
                 .build();
 
         memberRepository.save(member);
@@ -113,7 +116,7 @@ public class AuthService {
 
     public void forgotPassword(ForgotPasswordRequest request) {
 
-        memberRepository.findByEmail(request.email()).ifPresent(member -> {
+        memberRepository.findByEmail(normalizeEmail(request.email())).ifPresent(member -> {
             if (!passwordResetTokenStore.acquireCooldown(member.getId())) {
                 return;
             }
@@ -134,6 +137,12 @@ public class AuthService {
         member.changePassword(passwordEncoder.encode(request.newPassword()));
         memberRepository.save(member);
         refreshTokenStore.delete(memberId);
+    }
+
+    private String normalizeEmail(String email) {
+
+        return email.strip().toLowerCase(Locale.ROOT);
+
     }
 
     private String generateResetToken() {
