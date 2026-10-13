@@ -90,6 +90,15 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<ErrorResponse> handleExternalApi(ExternalApiException e) {
+
+        return ResponseEntity
+                        .status(ErrorCode.EXTERNAL_API_FAILED.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.EXTERNAL_API_FAILED));
+
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
 

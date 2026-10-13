@@ -20,9 +20,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.web.client.RestClientException;
 
 import com.mealgram.common.exception.BusinessException;
+import com.mealgram.common.exception.ExternalApiException;
 import com.mealgram.common.llm.LlmClient;
 import com.mealgram.meal.dto.MealResponse;
 import com.mealgram.member.Member;
@@ -131,7 +131,7 @@ class MealServiceTest {
     @DisplayName("LLM 호출이 계속 실패하면 식단 생성 실패로 알린다.")
     void failsWhenLlmAlwaysFails() {
 
-        when(llmClient.chat(anyString(), anyString())).thenThrow(new RestClientException("실패"));
+        when(llmClient.chat(anyString(), anyString())).thenThrow(new ExternalApiException("LLM", "실패"));
 
         assertThrows(BusinessException.class, this::recommend);
 

@@ -91,6 +91,17 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("외부 API 호출 실패는 502 공통 오류 형식으로 응답하고 실패 사유는 숨긴다.")
+    void externalApiFailure() {
+
+        ResponseEntity<ErrorResponse> response = handler.handleExternalApi(new ExternalApiException("LLM", "상태 401"));
+
+        assertError(response, HttpStatus.BAD_GATEWAY, ErrorCode.EXTERNAL_API_FAILED);
+        assertFalse(response.getBody().error().message().contains("401"));
+
+    }
+
+    @Test
     @DisplayName("업무 예외는 지정한 상태와 코드로 응답한다.")
     void businessException() {
 
