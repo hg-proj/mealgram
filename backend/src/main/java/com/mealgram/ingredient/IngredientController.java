@@ -1,8 +1,11 @@
 package com.mealgram.ingredient;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mealgram.common.validation.SortValidator;
 import com.mealgram.ingredient.dto.IngredientSearchResponse;
 import com.mealgram.ingredient.dto.MyIngredientCreateResponse;
 import com.mealgram.ingredient.dto.MyIngredientRequest;
@@ -26,6 +30,9 @@ import jakarta.validation.Valid;
 @RestController
 public class IngredientController {
 
+    private static final Set<String> SEARCH_SORT_PROPERTIES = Set.of("id", "name");
+    private static final Set<String> MY_SORT_PROPERTIES = Set.of("id", "createdAt");
+
     private final IngredientService ingredientService;
 
     public IngredientController(IngredientService ingredientService) {
@@ -35,7 +42,9 @@ public class IngredientController {
     @GetMapping("/ingredients")
     public ResponseEntity<List<IngredientSearchResponse>> search(
             @RequestParam(defaultValue = "") String keyword,
-            Pageable pageable) {
+            @PageableDefault(sort = "name") Pageable pageable) {
+
+        SortValidator.require(pageable, SEARCH_SORT_PROPERTIES);
 
         return ResponseEntity.ok(ingredientService.search(keyword, pageable));
 
@@ -44,7 +53,9 @@ public class IngredientController {
     @GetMapping("/members/me/ingredients")
     public ResponseEntity<List<MyIngredientResponse>> getMyIngredients(
             @AuthenticationPrincipal Long memberId,
-            Pageable pageable) {
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        SortValidator.require(pageable, MY_SORT_PROPERTIES);
 
         return ResponseEntity.ok(ingredientService.getMyIngredients(memberId, pageable));
 
