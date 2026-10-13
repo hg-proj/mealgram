@@ -8,14 +8,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mealgram.common.exception.ExternalApiException;
+
+import lombok.extern.slf4j.Slf4j;
 
 // 프롬프트를 보내 JSON 응답을 받는 LLM 호출
 
+@Slf4j
 @Component
 public class LlmClient {
 
+    private static final String SERVICE = "LLM";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String SYSTEM_ROLE = "system";
     private static final String USER_ROLE = "user";
@@ -31,7 +38,6 @@ public class LlmClient {
                      @Value("${openai.chat-url}") String url) {
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory();
         requestFactory.setReadTimeout(READ_TIMEOUT);
-
         this.restClient = RestClient.builder().baseUrl(url).requestFactory(requestFactory).build();
         this.apiKey = apiKey;
         this.model = model;
@@ -47,36 +53,59 @@ public class LlmClient {
                 List.of(new Message(SYSTEM_ROLE, systemPrompt), new Message(USER_ROLE, userPrompt)),
                 new ResponseFormat(JSON_FORMAT));
 
-        ChatResponse response = restClient.post()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + apiKey)
-                .body(request)
-                .retrieve()
-                .body(ChatResponse.class);
+        long start = System.currentTimeMillis();
+
+        try {
+            ChatResponse response = restClient.post()
+                    .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + apiKey)
+                    .body(request)
+                    .retrieve()
+                    .body(ChatResponse.class);
+
+            return contentOf(response);
+
+        } catch (RestClientResponseException e) {
+            log.warn("{} 호출 실패: 상태 {}, {}ms", SERVICE, e.getStatusCode().value(), elapsed(start));
+            throw new ExternalApiException(SERVICE, "상태 " + e.getStatusCode().value(), e);
+        } catch (RestClientException e) {
+            log.warn("{} 호출 실패: {}, {}ms", SERVICE, e.getClass().getSimpleName(), elapsed(start));
+            throw new ExternalApiException(SERVICE, e.getClass().getSimpleName(), e);
+        }
+
+    }
+
+    private String contentOf(ChatResponse response) {
+
+        if (response == null || response.choices() == null || response.choices().isEmpty()
+                || response.choices().get(0).message() == null || response.choices().get(0).message().content() == null) {
+            throw new ExternalApiException(SERVICE, "응답이 비어 있습니다.");
+        }
 
         return response.choices().get(0).message().content();
+
+    }
+
+    private long elapsed(long start) {
+
+        return System.currentTimeMillis() - start;
 
     }
 
     private record ChatRequest(String model,
                                List<Message> messages,
                                @JsonProperty("response_format") ResponseFormat responseFormat) {
-
     }
 
     private record Message(String role, String content) {
-
     }
 
     private record ResponseFormat(String type) {
-
     }
 
     private record ChatResponse(List<Choice> choices) {
-
     }
 
     private record Choice(Message message) {
-
     }
 
 }
