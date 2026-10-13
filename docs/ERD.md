@@ -139,7 +139,7 @@ erDiagram
 | height (키) | DECIMAL | nullable, 50~250cm |
 | weight (몸무게) | DECIMAL | nullable, 10~300kg |
 | activity_level (활동량) | VARCHAR(20) | nullable, Java enum ActivityLevel(비활동적/저활동적/활동적/매우활동적) |
-| email (이메일) | VARCHAR | NOT NULL, UNIQUE |
+| email (이메일) | VARCHAR | NOT NULL, UNIQUE, 소문자로 저장(CHECK email = lower(email)) |
 | created_at (가입일시) | TIMESTAMP | NOT NULL |
 | updated_at (수정일시) | TIMESTAMP | NOT NULL |
 
