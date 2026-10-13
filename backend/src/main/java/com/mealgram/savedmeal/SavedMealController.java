@@ -1,6 +1,7 @@
 package com.mealgram.savedmeal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mealgram.common.validation.SortValidator;
 import com.mealgram.savedmeal.dto.SavedMealCreateResponse;
 import com.mealgram.savedmeal.dto.SavedMealRequest;
 import com.mealgram.savedmeal.dto.SavedMealResponse;
@@ -27,6 +29,8 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/saved-meals")
 public class SavedMealController {
+
+    private static final Set<String> SORT_PROPERTIES = Set.of("id", "createdAt");
 
     private final SavedMealService savedMealService;
 
@@ -46,6 +50,8 @@ public class SavedMealController {
     public ResponseEntity<List<SavedMealResponse>> getSavedMeals(
             @AuthenticationPrincipal Long memberId,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        SortValidator.require(pageable, SORT_PROPERTIES);
 
         return ResponseEntity.ok(savedMealService.getSavedMeals(memberId, pageable));
 
