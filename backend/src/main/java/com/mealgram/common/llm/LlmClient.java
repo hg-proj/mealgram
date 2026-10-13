@@ -1,5 +1,6 @@
 package com.mealgram.common.llm;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
 
@@ -27,7 +28,9 @@ public class LlmClient {
     private static final String SYSTEM_ROLE = "system";
     private static final String USER_ROLE = "user";
     private static final String JSON_FORMAT = "json_object";
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(120);
+    private static final int MAX_TOKENS = 2000;
 
     private final RestClient restClient;
     private final String apiKey;
@@ -36,7 +39,8 @@ public class LlmClient {
     public LlmClient(@Value("${openai.api-key}") String apiKey,
                      @Value("${openai.chat-model}") String model,
                      @Value("${openai.chat-url}") String url) {
-        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory();
+        HttpClient httpClient = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(READ_TIMEOUT);
         this.restClient = RestClient.builder().baseUrl(url).requestFactory(requestFactory).build();
         this.apiKey = apiKey;
@@ -51,7 +55,7 @@ public class LlmClient {
 
         ChatRequest request = new ChatRequest(model,
                 List.of(new Message(SYSTEM_ROLE, systemPrompt), new Message(USER_ROLE, userPrompt)),
-                new ResponseFormat(JSON_FORMAT));
+                new ResponseFormat(JSON_FORMAT), MAX_TOKENS);
 
         long start = System.currentTimeMillis();
 
@@ -93,7 +97,8 @@ public class LlmClient {
 
     private record ChatRequest(String model,
                                List<Message> messages,
-                               @JsonProperty("response_format") ResponseFormat responseFormat) {
+                               @JsonProperty("response_format") ResponseFormat responseFormat,
+                               @JsonProperty("max_tokens") int maxTokens) {
     }
 
     private record Message(String role, String content) {

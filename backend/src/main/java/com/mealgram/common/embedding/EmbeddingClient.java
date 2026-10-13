@@ -1,5 +1,6 @@
 package com.mealgram.common.embedding;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
@@ -24,6 +25,7 @@ public class EmbeddingClient {
 
     private static final String SERVICE = "임베딩";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);
 
     private final RestClient restClient;
@@ -33,7 +35,8 @@ public class EmbeddingClient {
     public EmbeddingClient(@Value("${openai.api-key}") String apiKey,
                            @Value("${openai.embedding-model}") String model,
                            @Value("${openai.embedding-url}") String url) {
-        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory();
+        HttpClient httpClient = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(READ_TIMEOUT);
         this.restClient = RestClient.builder().baseUrl(url).requestFactory(requestFactory).build();
         this.apiKey = apiKey;

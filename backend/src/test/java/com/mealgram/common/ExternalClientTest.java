@@ -82,6 +82,20 @@ class ExternalClientTest {
     }
 
     @Test
+    @DisplayName("LLM 요청에 응답 길이 상한과 JSON 응답 형식을 담아 보낸다.")
+    void llmRequestHasTokenLimit() {
+
+        status = 200;
+        body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"{}\"}}]}";
+
+        llm().chat("시스템", "사용자");
+
+        assertTrue(lastRequestBody.contains("\"max_tokens\":2000"), lastRequestBody);
+        assertTrue(lastRequestBody.contains("\"response_format\":{\"type\":\"json_object\"}"), lastRequestBody);
+
+    }
+
+    @Test
     @DisplayName("LLM이 오류 상태를 주면 외부 호출 실패로 알리고 응답 본문과 키는 메시지에 넣지 않는다.")
     void llmErrorStatusBecomesExternalApiException() {
 
