@@ -47,19 +47,23 @@ public final class MealNutritionValidator {
             return best;
         }
 
+        long[][] hundredths = hundredthsOf(recipes);
         int levels = (int) Math.round((PORTION_MAX - PORTION_MIN) / PORTION_STEP) + 1;
-        int[] index = new int[size];
+        int minTenths = (int) Math.round(PORTION_MIN * 10);
+        int[] tenths = new int[size];
         double[] current = new double[size];
         double bestCost = Double.MAX_VALUE;
 
         for (int count = (int) Math.pow(levels, size), i = 0; i < count; i++) {
             int rest = i;
             for (int j = 0; j < size; j++) {
-                index[j] = rest % levels;
+                tenths[j] = minTenths + rest % levels;
                 rest /= levels;
-                current[j] = Math.round((PORTION_MIN + index[j] * PORTION_STEP) * 10) / 10.0;
+                current[j] = tenths[j] / 10.0;
             }
-            double cost = cost(recipes, current, targetCalorie);
+            double cost = hundredths == null
+                    ? cost(recipes, current, targetCalorie)
+                    : cost(hundredths, tenths, current, targetCalorie);
             if (cost < bestCost) {
                 bestCost = cost;
                 best = current.clone();
@@ -165,12 +169,59 @@ public final class MealNutritionValidator {
 
     }
 
+    private static long[][] hundredthsOf(List<Recipe> recipes) {
+
+        long[][] result = new long[recipes.size()][];
+        for (int i = 0; i < recipes.size(); i++) {
+            Recipe recipe = recipes.get(i);
+            BigDecimal[] values = {recipe.getCalorie(), recipe.getCarbohydrate(), recipe.getProtein(), recipe.getFat()};
+            result[i] = new long[values.length];
+            for (int k = 0; k < values.length; k++) {
+                if (values[k].scale() > 2 || values[k].signum() < 0) {
+                    return null;
+                }
+                result[i][k] = values[k].movePointRight(2).longValueExact();
+            }
+        }
+
+        return result;
+
+    }
+
+    private static double cost(long[][] hundredths, int[] tenths, double[] portions, int targetCalorie) {
+
+        long[] thousandths = new long[4];
+        for (int i = 0; i < hundredths.length; i++) {
+            for (int k = 0; k < thousandths.length; k++) {
+                thousandths[k] += hundredths[i][k] * tenths[i];
+            }
+        }
+
+        return costOf(roundedTenths(thousandths[0]) / 10.0, roundedTenths(thousandths[1]) / 10.0,
+                roundedTenths(thousandths[2]) / 10.0, roundedTenths(thousandths[3]) / 10.0, portions, targetCalorie);
+
+    }
+
+    private static long roundedTenths(long thousandths) {
+
+        return (thousandths + 50) / 100;
+
+    }
+
     private static double cost(List<Recipe> recipes, double[] portions, int targetCalorie) {
 
         double calorie = sum(recipes, Recipe::getCalorie, portions).doubleValue();
         double carbohydrate = sum(recipes, Recipe::getCarbohydrate, portions).doubleValue();
         double protein = sum(recipes, Recipe::getProtein, portions).doubleValue();
         double fat = sum(recipes, Recipe::getFat, portions).doubleValue();
+
+        return costOf(calorie, carbohydrate, protein, fat, portions, targetCalorie);
+
+    }
+
+    private static double costOf(double calorie, double carbohydrate, double protein, double fat, double[] portions,
+                                 int targetCalorie) {
+
         double energy = carbohydrate * CARBOHYDRATE_KCAL_PER_GRAM + protein * PROTEIN_KCAL_PER_GRAM
                 + fat * FAT_KCAL_PER_GRAM;
 
