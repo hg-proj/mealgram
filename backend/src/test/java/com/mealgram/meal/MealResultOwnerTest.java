@@ -2,6 +2,7 @@ package com.mealgram.meal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -130,13 +131,25 @@ class MealResultOwnerTest {
     }
 
     @Test
-    @DisplayName("회원 표시가 없는 결과는 조회할 수 없다.")
-    void resultWithoutOwnerIsNotFound() {
+    @DisplayName("소유자 표시가 없는 예전 형식의 결과는 조회할 수 없다.")
+    void resultInOldFormatIsNotFound() {
 
         MealResponse created = mealService.recommend(1L, null, List.of(), null, "유지", "한식");
-        store.remove("meal:owner:" + created.id());
+        String oldFormat = store.get("meal:" + created.id());
+        store.put("meal:" + created.id(), oldFormat.substring(oldFormat.indexOf("\"response\":") + 11, oldFormat.length() - 1));
 
         assertNotFound(1L, created.id());
+
+    }
+
+    @Test
+    @DisplayName("결과와 소유자를 하나의 키에 함께 저장한다.")
+    void storesResultAndOwnerInOneKey() {
+
+        MealResponse created = mealService.recommend(1L, null, List.of(), null, "유지", "한식");
+
+        assertEquals(1, store.size());
+        assertTrue(store.get("meal:" + created.id()).contains("\"memberId\":1"));
 
     }
 
