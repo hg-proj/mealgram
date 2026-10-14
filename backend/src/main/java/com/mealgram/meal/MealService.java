@@ -76,6 +76,7 @@ public class MealService {
                                   String genre) {
 
         long start = System.currentTimeMillis();
+        int targetCalorie = targetCalorie(memberId, goal);
         RecipeSearchResult found = recipeSearchService.search(requiredId, subIds, mainIngredientId, goal, genre);
         List<RecipeCandidate> candidates = found.candidates();
         if (candidates.isEmpty()) {
@@ -83,7 +84,7 @@ public class MealService {
         }
 
         MealResponse response = new MealResponse(UUID.randomUUID().toString(), found.relaxed(),
-                generate(candidates, goal, genre, targetCalorie(memberId, goal)));
+                generate(candidates, goal, genre, targetCalorie));
         redisTemplate.opsForValue().set(KEY_PREFIX + response.id(),
                 jsonMapper.writeValueAsString(new StoredMeal(memberId, response)), RESULT_TTL);
 
