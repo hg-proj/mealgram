@@ -38,7 +38,7 @@ class PasswordResetMailerTest {
     void sendsMailWithLink() {
 
         when(provider.getIfAvailable()).thenReturn(mailSender);
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "noreply@mealgram.test");
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "noreply@mealgram.test", false);
 
         mailer.send("a@example.com", "TOKEN123");
 
@@ -56,7 +56,7 @@ class PasswordResetMailerTest {
     void omitsFromWhenBlank() {
 
         when(provider.getIfAvailable()).thenReturn(mailSender);
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "");
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "", false);
 
         mailer.send("a@example.com", "TOKEN123");
 
@@ -71,7 +71,7 @@ class PasswordResetMailerTest {
     void doesNothingWithoutMailSender() {
 
         when(provider.getIfAvailable()).thenReturn(null);
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "");
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "", false);
 
         assertDoesNotThrow(() -> mailer.send("a@example.com", "TOKEN123"));
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
@@ -84,7 +84,7 @@ class PasswordResetMailerTest {
 
         when(provider.getIfAvailable()).thenReturn(mailSender);
         doThrow(new MailSendException("실패")).when(mailSender).send(any(SimpleMailMessage.class));
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "");
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "", false);
 
         assertDoesNotThrow(() -> mailer.send("a@example.com", "TOKEN123"));
 
