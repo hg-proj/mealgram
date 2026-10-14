@@ -11,6 +11,7 @@ import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
+import com.mealgram.common.security.LoginAttemptStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
@@ -34,19 +35,22 @@ public class AuthService {
     private final RefreshTokenStore refreshTokenStore;
     private final PasswordResetTokenStore passwordResetTokenStore;
     private final PasswordResetMailer passwordResetMailer;
+    private final LoginAttemptStore loginAttemptStore;
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int RESET_TOKEN_BYTES = 32;
 
     public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider, RefreshTokenStore refreshTokenStore,
-                       PasswordResetTokenStore passwordResetTokenStore, PasswordResetMailer passwordResetMailer) {
+                       PasswordResetTokenStore passwordResetTokenStore, PasswordResetMailer passwordResetMailer,
+                       LoginAttemptStore loginAttemptStore) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenStore = refreshTokenStore;
         this.passwordResetTokenStore = passwordResetTokenStore;
         this.passwordResetMailer = passwordResetMailer;
+        this.loginAttemptStore = loginAttemptStore;
     }
 
     public SignupResponse signup(SignupRequest request) {
@@ -82,12 +86,20 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        Member member = memberRepository.findByLoginId(request.loginId())
-                        .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
-                        
-        if (!passwordEncoder.matches(request.password(), member.getPassword())){
+        String loginId = request.loginId();
+
+        if (loginAttemptStore.isBlocked(loginId)) {
+            throw new BusinessException(ErrorCode.LOGIN_BLOCKED);
+        }
+
+        Member member = memberRepository.findByLoginId(loginId).orElse(null);
+
+        if (member == null || !passwordEncoder.matches(request.password(), member.getPassword())) {
+            loginAttemptStore.recordFailure(loginId);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
+
+        loginAttemptStore.reset(loginId);
 
         String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
