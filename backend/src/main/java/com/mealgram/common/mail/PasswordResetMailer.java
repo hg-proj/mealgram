@@ -2,6 +2,7 @@ package com.mealgram.common.mail;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -28,13 +29,16 @@ public class PasswordResetMailer {
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
     private final String frontendUrl;
     private final String from;
+    private final boolean logResetLink;
 
     public PasswordResetMailer(ObjectProvider<JavaMailSender> mailSenderProvider,
                                @Value("${app.frontend-url}") String frontendUrl,
-                               @Value("${spring.mail.username:}") String from) {
+                               @Value("${spring.mail.username:}") String from,
+                               @Value("${app.reset-link-log:false}") boolean logResetLink) {
         this.mailSenderProvider = mailSenderProvider;
         this.frontendUrl = frontendUrl;
         this.from = from;
+        this.logResetLink = logResetLink;
     }
 
     public void send(String email, String token) {
@@ -42,7 +46,11 @@ public class PasswordResetMailer {
         String link = frontendUrl + "/reset-password?token=" + token;
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
         if (mailSender == null) {
-            log.info("메일 설정이 없어 재설정 링크를 로그로만 남깁니다. 수신 {}, 링크 {}", email, link);
+            if (logResetLink) {
+                log.info("메일 설정이 없어 재설정 링크를 로그로만 남깁니다. 수신 {}, 링크 {}", email, link);
+            } else {
+                log.error("메일 설정이 없어 재설정 메일을 보내지 못했습니다.");
+            }
             return;
         }
 
@@ -57,7 +65,7 @@ public class PasswordResetMailer {
         try {
             mailSender.send(message);
         } catch (MailException e) {
-            log.error("재설정 메일 발송에 실패했습니다. 수신 {}", email, e);
+            log.error("재설정 메일 발송에 실패했습니다: {}", NestedExceptionUtils.getMostSpecificCause(e).getMessage());
         }
 
     }
