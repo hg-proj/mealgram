@@ -39,6 +39,7 @@ class LoginProtectionTest {
         memberRepository = mock(MemberRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         loginAttemptStore = mock(LoginAttemptStore.class);
+        when(passwordEncoder.encode(anyString())).thenReturn("dummy-hash");
         JwtTokenProvider provider = mock(JwtTokenProvider.class);
         when(provider.generateAccessToken(1L)).thenReturn("access");
         when(provider.generateRefreshToken(1L)).thenReturn("refresh");
@@ -88,6 +89,19 @@ class LoginProtectionTest {
 
         assertEquals(ErrorCode.INVALID_CREDENTIALS, errorOf("nobody01", "password12!"));
         verify(loginAttemptStore).recordFailure("nobody01");
+
+    }
+
+    @Test
+    @DisplayName("없는 아이디도 임의의 해시와 비밀번호를 비교해 응답 시간 차이를 없앤다.")
+    void unknownLoginIdStillComparesPassword() {
+
+        when(memberRepository.findByLoginId("nobody01")).thenReturn(Optional.empty());
+        when(passwordEncoder.matches("password12!", "dummy-hash")).thenReturn(true);
+
+        assertEquals(ErrorCode.INVALID_CREDENTIALS, errorOf("nobody01", "password12!"));
+        verify(passwordEncoder).matches("password12!", "dummy-hash");
+        verify(memberRepository, never()).save(org.mockito.ArgumentMatchers.any());
 
     }
 

@@ -36,7 +36,9 @@ public class AuthService {
     private final PasswordResetTokenStore passwordResetTokenStore;
     private final PasswordResetMailer passwordResetMailer;
     private final LoginAttemptStore loginAttemptStore;
+    private final String dummyHash;
 
+    private static final String DUMMY_PASSWORD = "mealgram-dummy-password";
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int RESET_TOKEN_BYTES = 32;
 
@@ -51,6 +53,7 @@ public class AuthService {
         this.passwordResetTokenStore = passwordResetTokenStore;
         this.passwordResetMailer = passwordResetMailer;
         this.loginAttemptStore = loginAttemptStore;
+        this.dummyHash = passwordEncoder.encode(DUMMY_PASSWORD);
     }
 
     public SignupResponse signup(SignupRequest request) {
@@ -94,7 +97,10 @@ public class AuthService {
 
         Member member = memberRepository.findByLoginId(loginId).orElse(null);
 
-        if (member == null || !passwordEncoder.matches(request.password(), member.getPassword())) {
+        String hash = member == null ? dummyHash : member.getPassword();
+        boolean matched = passwordEncoder.matches(request.password(), hash);
+
+        if (member == null || !matched) {
             loginAttemptStore.recordFailure(loginId);
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
