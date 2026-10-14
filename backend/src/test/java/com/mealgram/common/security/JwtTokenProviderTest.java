@@ -2,6 +2,7 @@ package com.mealgram.common.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,15 @@ class JwtTokenProviderTest {
 
         assertTrue(provider.isRefreshToken(token));
         assertFalse(provider.isAccessToken(token));
+
+    }
+
+    @Test
+    @DisplayName("같은 회원의 토큰을 연달아 발급해도 서로 다른 토큰이다.")
+    void tokensIssuedAtSameTimeAreDifferent() {
+
+        assertNotEquals(provider.generateRefreshToken(1L), provider.generateRefreshToken(1L));
+        assertNotEquals(provider.generateAccessToken(1L), provider.generateAccessToken(1L));
 
     }
 
