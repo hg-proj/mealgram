@@ -1,6 +1,7 @@
 package com.mealgram.common.security;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -42,6 +43,7 @@ public class JwtTokenProvider {
         Date expiredAt = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(memberId))
                 .claim(TYPE_CLAIM, type)
                 .issuedAt(now)
