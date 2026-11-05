@@ -120,6 +120,8 @@ candidates[] 항목
 
 calorie, carbohydrate, protein, fat, sodium은 표준 음식과 연결되지 않은 레시피에서는 null(영양 정보 없음). 영양 값은 유사한 표준 음식 기준의 추정치라 정확하지 않을 수 있음
 
+imageUrl은 서버가 정적 파일로 제공하는 /images/recipes/{레시피 id}.webp 경로이고 로그인 없이 열 수 있음. 사진이 없는 레시피는 null
+
 ### 저장식단
 마이페이지 - 내 식단
 > /saved-meals
