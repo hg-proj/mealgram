@@ -1,5 +1,6 @@
 package com.mealgram.recipe;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -65,6 +66,24 @@ public class RecipeVectorRepository {
              limit :limit
             """;
 
+    private static final String PROTEIN_SIMILAR_SQL = SELECT_COLUMNS + """
+                   1 - (r.embedding <=> cast(:vector as vector)) as similarity,
+                   0 as overlap
+              from recipe r
+             where r.embedding is not null and r.category = :category and r.protein >= :minProtein
+             order by r.embedding <=> cast(:vector as vector)
+             limit :limit
+            """;
+
+    private static final String PROTEIN_RANDOM_SQL = SELECT_COLUMNS + """
+                   0.0 as similarity,
+                   0 as overlap
+              from recipe r
+             where r.category = :category and r.protein >= :minProtein
+             order by random()
+             limit :limit
+            """;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     public RecipeVectorRepository(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -99,6 +118,21 @@ public class RecipeVectorRepository {
         params.addValue("vector", Arrays.toString(vector));
 
         return jdbcTemplate.query(CATEGORY_SIMILAR_SQL, params, this::toCandidate);
+
+    }
+
+    public List<RecipeCandidate> findProteinDishes(float[] vector, String category, BigDecimal minProtein, int limit) {
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("category", category)
+                .addValue("minProtein", minProtein)
+                .addValue("limit", limit);
+        if (vector == null) {
+            return jdbcTemplate.query(PROTEIN_RANDOM_SQL, params, this::toCandidate);
+        }
+        params.addValue("vector", Arrays.toString(vector));
+
+        return jdbcTemplate.query(PROTEIN_SIMILAR_SQL, params, this::toCandidate);
 
     }
 

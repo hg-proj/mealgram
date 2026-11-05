@@ -31,6 +31,8 @@ public class RecipeSearchService {
     private static final int MIN_CANDIDATE_SIZE = 15;
     private static final double OVERLAP_WEIGHT = 0.3;
     private static final Map<String, Integer> MIN_CATEGORY_SIZE = Map.of("밥", 3, "국&찌개", 3, "반찬", 6);
+    private static final String SIDE_CATEGORY = "반찬";
+    private static final int MIN_PROTEIN_SIDE_SIZE = 3;
 
     private final RecipeVectorRepository recipeVectorRepository;
     private final IngredientRepository ingredientRepository;
@@ -120,8 +122,25 @@ public class RecipeSearchService {
                     .limit(shortage)
                     .forEach(candidates::add);
         });
+        fillProteinSides(candidates, ids, vector);
 
         return candidates;
+
+    }
+
+    private void fillProteinSides(List<RecipeCandidate> candidates, Set<Long> ids, float[] vector) {
+
+        long shortage = MIN_PROTEIN_SIDE_SIZE - candidates.stream()
+                .filter(candidate -> SIDE_CATEGORY.equals(candidate.category()) && candidate.isProteinDish())
+                .count();
+        if (shortage <= 0) {
+            return;
+        }
+        recipeVectorRepository.findProteinDishes(vector, SIDE_CATEGORY, RecipeCandidate.PROTEIN_DISH_MIN,
+                        MIN_PROTEIN_SIDE_SIZE + candidates.size()).stream()
+                .filter(candidate -> ids.add(candidate.id()))
+                .limit(shortage)
+                .forEach(candidates::add);
 
     }
 
