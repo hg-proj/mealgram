@@ -35,6 +35,13 @@ class MealComposerTest {
 
     }
 
+    private RecipeCandidate protein(long id, String category) {
+
+        return new RecipeCandidate(id, "요리" + id, category, "", BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.valueOf(15), BigDecimal.ZERO, BigDecimal.ZERO, List.of(), 0.5, 0, true);
+
+    }
+
     private List<RecipeCandidate> pool() {
 
         List<RecipeCandidate> pool = new ArrayList<>();
@@ -130,6 +137,75 @@ class MealComposerTest {
 
         assertTrue(result.contains(5L));
         assertTrue(!result.contains(20L));
+
+    }
+
+    @Test
+    @DisplayName("단백질 요리가 없으면 마지막 반찬을 단백질 반찬으로 바꾼다.")
+    void replacesLastSideWithProteinDish() {
+
+        List<RecipeCandidate> pool = new ArrayList<>(pool());
+        pool.add(protein(12, "반찬"));
+
+        List<Long> result = MealComposer.compose(List.of(1L, 3L, 5L, 6L, 7L), pool, new HashSet<>());
+
+        assertTrue(result.contains(12L));
+        assertTrue(!result.contains(7L));
+        assertEquals(3, count(result, pool, "반찬"));
+
+    }
+
+    @Test
+    @DisplayName("이미 단백질 반찬이 있으면 바꾸지 않는다.")
+    void keepsPickedWhenProteinDishExists() {
+
+        List<RecipeCandidate> pool = new ArrayList<>(pool());
+        pool.add(protein(12, "반찬"));
+        List<Long> picked = List.of(1L, 3L, 5L, 12L, 7L);
+
+        assertEquals(picked, MealComposer.compose(picked, pool, new HashSet<>()));
+
+    }
+
+    @Test
+    @DisplayName("일품이 단백질 요리면 반찬을 바꾸지 않는다.")
+    void keepsPickedWhenMainDishHasProtein() {
+
+        List<RecipeCandidate> pool = new ArrayList<>(pool());
+        pool.add(protein(12, "반찬"));
+        pool.set(10, protein(11, "일품"));
+        List<Long> picked = List.of(11L, 3L, 5L, 6L, 7L);
+
+        assertEquals(picked, MealComposer.compose(picked, pool, new HashSet<>()));
+
+    }
+
+    @Test
+    @DisplayName("빈 칸을 채울 때도 단백질 반찬을 넣는다.")
+    void fillsWithProteinDish() {
+
+        List<RecipeCandidate> pool = new ArrayList<>(pool());
+        pool.add(protein(12, "반찬"));
+
+        List<Long> result = MealComposer.compose(List.of(), pool, new HashSet<>());
+
+        assertTrue(result.contains(12L));
+        assertEquals(3, count(result, pool, "반찬"));
+
+    }
+
+    @Test
+    @DisplayName("단백질 반찬은 다른 식단안에서 쓰지 않은 것을 먼저 쓴다.")
+    void prefersUnusedProteinDish() {
+
+        List<RecipeCandidate> pool = new ArrayList<>(pool());
+        pool.add(protein(12, "반찬"));
+        pool.add(protein(13, "반찬"));
+
+        List<Long> result = MealComposer.compose(List.of(), pool, new HashSet<>(List.of(12L)));
+
+        assertTrue(result.contains(13L));
+        assertTrue(!result.contains(12L));
 
     }
 

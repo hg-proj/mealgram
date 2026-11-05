@@ -19,6 +19,14 @@ public record RecipeCandidate(Long id,
                               long overlapCount,
                               boolean matched) {
 
+    public static final BigDecimal PROTEIN_DISH_MIN = BigDecimal.TEN;
+
+    public boolean isProteinDish() {
+
+        return protein != null && protein.compareTo(PROTEIN_DISH_MIN) >= 0;
+
+    }
+
     public RecipeCandidate withMatched(boolean matched) {
 
         return new RecipeCandidate(id, name, category, cookingMethod, calorie, carbohydrate, protein, fat, sodium,

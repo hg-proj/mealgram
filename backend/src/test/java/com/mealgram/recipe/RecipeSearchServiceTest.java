@@ -1,6 +1,7 @@
 package com.mealgram.recipe;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -62,6 +63,39 @@ class RecipeSearchServiceTest {
 
         service = new RecipeSearchService(vectorRepository, mock(IngredientRepository.class), embeddingClient,
                 new EmbeddingCache(redisTemplate, "test-model"));
+
+    }
+
+    @Test
+    @DisplayName("단백질 반찬 후보가 모자라면 단백질 반찬을 더 찾는다.")
+    @SuppressWarnings("unchecked")
+    void addsProteinSidesWhenShort() {
+
+        StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        List<RecipeCandidate> candidates = new ArrayList<>();
+        for (int i = 1; i <= 20; i++) {
+            String category = i <= 3 ? "밥" : i <= 6 ? "국&찌개" : "반찬";
+            candidates.add(new RecipeCandidate((long) i, "요리" + i, category, "", BigDecimal.TEN, BigDecimal.TEN,
+                    BigDecimal.ONE, BigDecimal.TEN, BigDecimal.TEN, List.of(), 0.9 - i * 0.01, 0, false));
+        }
+        List<RecipeCandidate> proteins = List.of(
+                new RecipeCandidate(101L, "단백질101", "반찬", "", BigDecimal.TEN, BigDecimal.TEN, BigDecimal.valueOf(20),
+                        BigDecimal.TEN, BigDecimal.TEN, List.of(), 0.5, 0, false),
+                new RecipeCandidate(102L, "단백질102", "반찬", "", BigDecimal.TEN, BigDecimal.TEN, BigDecimal.valueOf(20),
+                        BigDecimal.TEN, BigDecimal.TEN, List.of(), 0.5, 0, false));
+        RecipeVectorRepository vectorRepository = mock(RecipeVectorRepository.class);
+        when(vectorRepository.findSimilar(any(), anyList(), anyInt(), anyList(), anyInt())).thenReturn(candidates);
+        when(vectorRepository.findProteinDishes(any(), anyString(), any(BigDecimal.class), anyInt())).thenReturn(proteins);
+        RecipeSearchService proteinService = new RecipeSearchService(vectorRepository, mock(IngredientRepository.class),
+                embeddingClient, new EmbeddingCache(redisTemplate, "test-model"));
+
+        List<Long> ids = proteinService.search(null, null, null, "다이어트", "한식").candidates().stream()
+                .map(RecipeCandidate::id).toList();
+
+        assertTrue(ids.containsAll(List.of(101L, 102L)));
 
     }
 
