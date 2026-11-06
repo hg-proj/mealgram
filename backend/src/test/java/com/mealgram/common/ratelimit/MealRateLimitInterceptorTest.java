@@ -60,7 +60,7 @@ class MealRateLimitInterceptorTest {
 
     private boolean call(String method, MockHttpServletResponse response) {
 
-        MockHttpServletRequest request = new MockHttpServletRequest(method, "/meals");
+        MockHttpServletRequest request = new MockHttpServletRequest(method, "/api/meals");
 
         return interceptor.preHandle(request, response, new Object());
 

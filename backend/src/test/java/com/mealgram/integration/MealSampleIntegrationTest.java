@@ -17,7 +17,7 @@ class MealSampleIntegrationTest extends IntegrationTestSupport {
     @DisplayName("로그인 없이 랜덤 식단 세 개를 조회한다.")
     void returnsSamplesWithoutLogin() throws Exception {
 
-        MvcResult result = getJson("/meals/samples", null);
+        MvcResult result = getJson("/api/meals/samples", null);
         JsonNode samples = body(result);
 
         assertEquals(200, result.getResponse().getStatus());
@@ -35,7 +35,7 @@ class MealSampleIntegrationTest extends IntegrationTestSupport {
     @DisplayName("랜덤 식단의 메인 요리에는 사진 경로가 있다.")
     void mainDishHasImage() throws Exception {
 
-        JsonNode samples = body(getJson("/meals/samples", null));
+        JsonNode samples = body(getJson("/api/meals/samples", null));
 
         for (JsonNode sample : samples) {
             boolean hasImage = false;

@@ -17,7 +17,7 @@ class CorsConfigTest {
 
         CorsConfigurationSource source = new CorsConfig().corsConfigurationSource(frontendUrls);
 
-        return source.getCorsConfiguration(new MockHttpServletRequest("GET", "/meals"));
+        return source.getCorsConfiguration(new MockHttpServletRequest("GET", "/api/meals"));
 
     }
 
