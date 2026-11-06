@@ -86,7 +86,7 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
 
     private long ingredientId(String keyword, String token) throws Exception {
 
-        return body(getJson("/ingredients?keyword=" + keyword, token)).get(0).get("id").asLong();
+        return body(getJson("/api/ingredients?keyword=" + keyword, token)).get(0).get("id").asLong();
 
     }
 
@@ -96,16 +96,16 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
 
         Member member = signupAndLogin("srch");
 
-        JsonNode tofu = body(getJson("/ingredients?keyword=두부", member.accessToken()));
+        JsonNode tofu = body(getJson("/api/ingredients?keyword=두부", member.accessToken()));
         assertTrue(tofu.size() > 0);
         List<String> names = new ArrayList<>();
         tofu.forEach(item -> names.add(item.get("name").asString()));
         assertEquals(names.stream().sorted().toList(), names);
 
-        assertEquals(100, body(getJson("/ingredients?keyword=&size=500", member.accessToken())).size());
-        assertEquals(400, status(getJson("/ingredients?sort=password,desc", member.accessToken())));
+        assertEquals(100, body(getJson("/api/ingredients?keyword=&size=500", member.accessToken())).size());
+        assertEquals(400, status(getJson("/api/ingredients?sort=password,desc", member.accessToken())));
 
-        for (JsonNode item : body(getJson("/ingredients?keyword=&size=100", member.accessToken()))) {
+        for (JsonNode item : body(getJson("/api/ingredients?keyword=&size=100", member.accessToken()))) {
             assertFalse(item.get("name").asString().isBlank());
         }
 
@@ -119,18 +119,18 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         long tofu = ingredientId("두부", member.accessToken());
         long pork = ingredientId("돼지고기", member.accessToken());
 
-        MvcResult first = postJson("/members/me/ingredients", Map.of("ingredientId", tofu), member.accessToken());
+        MvcResult first = postJson("/api/members/me/ingredients", Map.of("ingredientId", tofu), member.accessToken());
         assertEquals(201, status(first));
-        assertEquals(201, status(postJson("/members/me/ingredients", Map.of("ingredientId", pork), member.accessToken())));
-        assertEquals(409, status(postJson("/members/me/ingredients", Map.of("ingredientId", tofu), member.accessToken())));
-        assertEquals(404, status(postJson("/members/me/ingredients", Map.of("ingredientId", 999999999L), member.accessToken())));
+        assertEquals(201, status(postJson("/api/members/me/ingredients", Map.of("ingredientId", pork), member.accessToken())));
+        assertEquals(409, status(postJson("/api/members/me/ingredients", Map.of("ingredientId", tofu), member.accessToken())));
+        assertEquals(404, status(postJson("/api/members/me/ingredients", Map.of("ingredientId", 999999999L), member.accessToken())));
 
-        JsonNode list = body(getJson("/members/me/ingredients", member.accessToken()));
+        JsonNode list = body(getJson("/api/members/me/ingredients", member.accessToken()));
         assertEquals(2, list.size());
         assertEquals(pork, list.get(0).get("ingredientId").asLong());
         assertEquals(tofu, list.get(1).get("ingredientId").asLong());
-        assertEquals(204, status(deleteJson("/members/me/ingredients/" + body(first).get("id").asLong(), member.accessToken())));
-        assertEquals(1, body(getJson("/members/me/ingredients", member.accessToken())).size());
+        assertEquals(204, status(deleteJson("/api/members/me/ingredients/" + body(first).get("id").asLong(), member.accessToken())));
+        assertEquals(1, body(getJson("/api/members/me/ingredients", member.accessToken())).size());
 
     }
 
@@ -145,7 +145,7 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         try {
             List<Future<Integer>> futures = new ArrayList<>();
             for (int i = 0; i < 8; i++) {
-                futures.add(executor.submit(() -> status(postJson("/members/me/ingredients", Map.of("ingredientId", ingredient), member.accessToken()))));
+                futures.add(executor.submit(() -> status(postJson("/api/members/me/ingredients", Map.of("ingredientId", ingredient), member.accessToken()))));
             }
             List<Integer> statuses = new ArrayList<>();
             for (Future<Integer> future : futures) {
@@ -168,25 +168,25 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         Member other = signupAndLogin("so");
         List<Long> recipeIds = jdbcTemplate.queryForList("select id from recipe order by id limit 2", Long.class);
 
-        MvcResult first = postJson("/saved-meals", Map.of("recipeId", recipeIds.get(0)), owner.accessToken());
-        MvcResult second = postJson("/saved-meals", Map.of("recipeId", recipeIds.get(1)), owner.accessToken());
+        MvcResult first = postJson("/api/saved-meals", Map.of("recipeId", recipeIds.get(0)), owner.accessToken());
+        MvcResult second = postJson("/api/saved-meals", Map.of("recipeId", recipeIds.get(1)), owner.accessToken());
         assertEquals(201, status(first));
         assertEquals(201, status(second));
-        assertEquals(409, status(postJson("/saved-meals", Map.of("recipeId", recipeIds.get(0)), owner.accessToken())));
-        assertEquals(404, status(postJson("/saved-meals", Map.of("recipeId", 999999999L), owner.accessToken())));
-        assertEquals(400, status(postJson("/saved-meals", Map.of(), owner.accessToken())));
+        assertEquals(409, status(postJson("/api/saved-meals", Map.of("recipeId", recipeIds.get(0)), owner.accessToken())));
+        assertEquals(404, status(postJson("/api/saved-meals", Map.of("recipeId", 999999999L), owner.accessToken())));
+        assertEquals(400, status(postJson("/api/saved-meals", Map.of(), owner.accessToken())));
 
-        JsonNode list = body(getJson("/saved-meals", owner.accessToken()));
+        JsonNode list = body(getJson("/api/saved-meals", owner.accessToken()));
         assertEquals(2, list.size());
         assertEquals(recipeIds.get(1), list.get(0).get("recipeId").asLong());
         assertFalse(list.get(0).get("name").asString().isBlank());
-        assertEquals(0, body(getJson("/saved-meals", other.accessToken())).size());
-        assertEquals(400, status(getJson("/saved-meals?sort=recipe.name", owner.accessToken())));
+        assertEquals(0, body(getJson("/api/saved-meals", other.accessToken())).size());
+        assertEquals(400, status(getJson("/api/saved-meals?sort=recipe.name", owner.accessToken())));
 
         long firstId = body(first).get("id").asLong();
-        assertEquals(404, status(deleteJson("/saved-meals/" + firstId, other.accessToken())));
-        assertEquals(204, status(deleteJson("/saved-meals/" + firstId, owner.accessToken())));
-        assertEquals(1, body(getJson("/saved-meals", owner.accessToken())).size());
+        assertEquals(404, status(deleteJson("/api/saved-meals/" + firstId, other.accessToken())));
+        assertEquals(204, status(deleteJson("/api/saved-meals/" + firstId, owner.accessToken())));
+        assertEquals(1, body(getJson("/api/saved-meals", owner.accessToken())).size());
 
     }
 
@@ -209,19 +209,19 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
                 """, Long.class, recipeId);
         String ownedName = jdbcTemplate.queryForObject("select name from ingredient where id = ?", String.class, ownedIngredient);
 
-        JsonNode before = body(getJson("/recipes/" + recipeId, member.accessToken()));
+        JsonNode before = body(getJson("/api/recipes/" + recipeId, member.accessToken()));
         assertTrue(before.toString().contains("\"" + ownedName + "\""));
         assertTrue(before.get("seasonings").size() >= 1);
 
-        assertEquals(201, status(postJson("/members/me/ingredients", Map.of("ingredientId", ownedIngredient), member.accessToken())));
-        JsonNode after = body(getJson("/recipes/" + recipeId, member.accessToken()));
+        assertEquals(201, status(postJson("/api/members/me/ingredients", Map.of("ingredientId", ownedIngredient), member.accessToken())));
+        JsonNode after = body(getJson("/api/recipes/" + recipeId, member.accessToken()));
         List<String> missing = new ArrayList<>();
         after.get("missingIngredients").forEach(item -> missing.add(item.asString()));
 
         assertFalse(missing.contains(ownedName));
         assertEquals(before.get("missingIngredients").size() - 1, missing.size());
         assertEquals(before.get("seasonings"), after.get("seasonings"));
-        assertEquals(404, status(getJson("/recipes/999999999", member.accessToken())));
+        assertEquals(404, status(getJson("/api/recipes/999999999", member.accessToken())));
 
     }
 
@@ -236,7 +236,7 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         Member member = signupAndLogin("meal");
         Member other = signupAndLogin("mealo");
 
-        MvcResult created = postJson("/meals", Map.of("goal", "다이어트", "genre", "한식"), member.accessToken());
+        MvcResult created = postJson("/api/meals", Map.of("goal", "다이어트", "genre", "한식"), member.accessToken());
         assertEquals(201, status(created));
         JsonNode meals = body(created);
         assertFalse(meals.get("relaxed").asBoolean());
@@ -249,11 +249,11 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         }
 
         String id = meals.get("id").asString();
-        assertEquals(200, status(getJson("/meals/" + id, member.accessToken())));
-        assertEquals(id, body(getJson("/meals/" + id, member.accessToken())).get("id").asString());
-        assertEquals(404, status(getJson("/meals/" + id, other.accessToken())));
-        assertEquals(404, status(getJson("/meals/00000000-0000-0000-0000-000000000000", member.accessToken())));
-        assertEquals(400, status(postJson("/meals", Map.of("goal", "아무거나"), member.accessToken())));
+        assertEquals(200, status(getJson("/api/meals/" + id, member.accessToken())));
+        assertEquals(id, body(getJson("/api/meals/" + id, member.accessToken())).get("id").asString());
+        assertEquals(404, status(getJson("/api/meals/" + id, other.accessToken())));
+        assertEquals(404, status(getJson("/api/meals/00000000-0000-0000-0000-000000000000", member.accessToken())));
+        assertEquals(400, status(postJson("/api/meals", Map.of("goal", "아무거나"), member.accessToken())));
 
     }
 
@@ -265,15 +265,15 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         Member other = signupAndLogin("rateo");
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(201, status(postJson("/meals", Map.of("goal", "유지"), member.accessToken())));
+            assertEquals(201, status(postJson("/api/meals", Map.of("goal", "유지"), member.accessToken())));
         }
-        MvcResult blocked = postJson("/meals", Map.of("goal", "유지"), member.accessToken());
+        MvcResult blocked = postJson("/api/meals", Map.of("goal", "유지"), member.accessToken());
 
         assertEquals(429, status(blocked));
         assertEquals("RATE_LIMIT_EXCEEDED", body(blocked).get("error").get("code").asString());
         assertTrue(Integer.parseInt(blocked.getResponse().getHeader("Retry-After")) > 0);
-        assertEquals(200, status(getJson("/members/me", member.accessToken())));
-        assertEquals(201, status(postJson("/meals", Map.of("goal", "유지"), other.accessToken())));
+        assertEquals(200, status(getJson("/api/members/me", member.accessToken())));
+        assertEquals(201, status(postJson("/api/meals", Map.of("goal", "유지"), other.accessToken())));
 
     }
 
@@ -282,9 +282,9 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
     void mealRecommendationForDeletedMember() throws Exception {
 
         Member member = signupAndLogin("gone");
-        assertEquals(204, status(deleteJson("/members/me", member.accessToken())));
+        assertEquals(204, status(deleteJson("/api/members/me", member.accessToken())));
 
-        MvcResult result = postJson("/meals", Map.of("goal", "유지"), member.accessToken());
+        MvcResult result = postJson("/api/meals", Map.of("goal", "유지"), member.accessToken());
 
         assertEquals(404, status(result));
         assertEquals("MEMBER_NOT_FOUND", body(result).get("error").get("code").asString());

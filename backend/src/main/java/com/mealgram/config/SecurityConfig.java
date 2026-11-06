@@ -51,8 +51,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/error", "/images/**", "/actuator/health", "/actuator/health/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/meals/samples").permitAll()
+                .requestMatchers("/api/auth/**", "/error", "/images/**", "/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/meals/samples").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))

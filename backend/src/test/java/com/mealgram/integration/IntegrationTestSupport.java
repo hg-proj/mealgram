@@ -156,9 +156,9 @@ public abstract class IntegrationTestSupport {
 
         String loginId = unique(prefix);
         String email = loginId + "@example.com";
-        postJson("/auth/signup", Map.of("nickname", "테스터", "loginId", loginId, "password", PASSWORD,
+        postJson("/api/auth/signup", Map.of("nickname", "테스터", "loginId", loginId, "password", PASSWORD,
                 "email", email, "age", 30, "gender", "FEMALE", "height", 160, "weight", 55, "activityLevel", "LIGHT"), null);
-        JsonNode login = body(postJson("/auth/login", Map.of("loginId", loginId, "password", PASSWORD), null));
+        JsonNode login = body(postJson("/api/auth/login", Map.of("loginId", loginId, "password", PASSWORD), null));
 
         return new Member(loginId, email, login.get("accessToken").asString(), login.get("refreshToken").asString());
 
