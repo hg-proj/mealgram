@@ -84,6 +84,15 @@ public class RecipeVectorRepository {
              limit :limit
             """;
 
+    private static final String RANDOM_WITH_IMAGE_SQL = SELECT_COLUMNS + """
+                   0.0 as similarity,
+                   0 as overlap
+              from recipe r
+             where r.image_url is not null and r.protein >= :minProtein
+             order by random()
+             limit :limit
+            """;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
     public RecipeVectorRepository(NamedParameterJdbcTemplate jdbcTemplate) {
@@ -133,6 +142,16 @@ public class RecipeVectorRepository {
         params.addValue("vector", Arrays.toString(vector));
 
         return jdbcTemplate.query(PROTEIN_SIMILAR_SQL, params, this::toCandidate);
+
+    }
+
+    public List<RecipeCandidate> findRandomWithImage(BigDecimal minProtein, int limit) {
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("minProtein", minProtein)
+                .addValue("limit", limit);
+
+        return jdbcTemplate.query(RANDOM_WITH_IMAGE_SQL, params, this::toCandidate);
 
     }
 
