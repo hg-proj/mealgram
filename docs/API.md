@@ -73,6 +73,7 @@
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
 | POST | /meals | 식단 추천 요청 | requiredId<br>subIds[]<br>ingredientId<br>goal 다이어트, 벌크업, 유지 중 하나<br>genre | body | 201<br>id<br>relaxed<br>candidates[] 항상 3개 |
+| GET | /meals/samples | 랜덤 식단 3개, 로그인 없이 조회 | - | - | 200<br>goal 다이어트, 유지, 벌크업 순서<br>title<br>recipes[] id, name, category, imageUrl, portion<br>nutrition 추천 결과의 nutrition과 같음 |
 | GET | /meals/{id} | 특정 추천 결과 다시 조회 | - | 경로변수 | 200<br>id<br>relaxed (조건 완화 여부)<br>candidates[] |
 
 candidates[] 항목
