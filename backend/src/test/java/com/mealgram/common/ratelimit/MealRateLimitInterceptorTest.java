@@ -40,7 +40,7 @@ class MealRateLimitInterceptorTest {
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(redisTemplate.getExpire(anyString())).thenReturn(50L);
-        interceptor = new MealRateLimitInterceptor(redisTemplate, 5, 60);
+        interceptor = new MealRateLimitInterceptor(redisTemplate, 5, 3, 60);
         login(1L);
 
     }
@@ -60,7 +60,14 @@ class MealRateLimitInterceptorTest {
 
     private boolean call(String method, MockHttpServletResponse response) {
 
+        return callFrom("127.0.0.1", method, response);
+
+    }
+
+    private boolean callFrom(String address, String method, MockHttpServletResponse response) {
+
         MockHttpServletRequest request = new MockHttpServletRequest(method, "/api/meals");
+        request.setRemoteAddr(address);
 
         return interceptor.preHandle(request, response, new Object());
 
@@ -132,15 +139,32 @@ class MealRateLimitInterceptorTest {
     }
 
     @Test
-    @DisplayName("추천 요청(POST)이 아니거나 로그인 정보가 없으면 세지 않는다.")
+    @DisplayName("추천 요청(POST)이 아니면 세지 않는다.")
     void ignoresOtherRequests() {
 
         assertTrue(call("GET", new MockHttpServletResponse()));
 
         SecurityContextHolder.clearContext();
-        assertTrue(call("POST", new MockHttpServletResponse()));
+        assertTrue(call("GET", new MockHttpServletResponse()));
 
         verify(valueOperations, never()).increment(anyString());
+
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 요청은 접속 주소별로 세고 회원보다 적게 허용한다.")
+    void limitsGuestsByAddress() {
+
+        SecurityContextHolder.clearContext();
+        when(valueOperations.increment("ratelimit:meals:guest:10.0.0.1")).thenReturn(3L, 4L);
+        when(valueOperations.increment("ratelimit:meals:guest:10.0.0.2")).thenReturn(1L);
+
+        assertTrue(callFrom("10.0.0.1", "POST", new MockHttpServletResponse()));
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> callFrom("10.0.0.1", "POST", new MockHttpServletResponse()));
+        assertEquals(ErrorCode.RATE_LIMIT_EXCEEDED, e.getErrorCode());
+
+        assertTrue(callFrom("10.0.0.2", "POST", new MockHttpServletResponse()));
 
     }
 
