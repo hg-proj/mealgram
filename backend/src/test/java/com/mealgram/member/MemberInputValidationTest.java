@@ -14,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.mealgram.meal.dto.MealRequest;
+import com.mealgram.member.Member.ActivityLevel;
+import com.mealgram.member.Member.Gender;
 import com.mealgram.member.dto.MemberUpdateRequest;
 import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
@@ -158,12 +160,29 @@ class MemberInputValidationTest {
     @DisplayName("식단 추천: 목표는 다이어트, 벌크업, 유지 중 하나이거나 비어 있어야 한다.")
     void mealGoal() {
 
-        assertTrue(fields(new MealRequest(null, null, null, "다이어트", null)).isEmpty());
-        assertTrue(fields(new MealRequest(null, null, null, "벌크업", "한식")).isEmpty());
-        assertTrue(fields(new MealRequest(null, null, null, "유지", null)).isEmpty());
-        assertTrue(fields(new MealRequest(null, null, null, null, null)).isEmpty());
-        assertEquals(Set.of("goal"), fields(new MealRequest(null, null, null, "아무거나", null)));
-        assertEquals(Set.of("goal"), fields(new MealRequest(null, null, null, "", null)));
+        assertTrue(fields(new MealRequest(null, null, null, "다이어트", null, null, null, null, null, null)).isEmpty());
+        assertTrue(fields(new MealRequest(null, null, null, "벌크업", "한식", null, null, null, null, null)).isEmpty());
+        assertTrue(fields(new MealRequest(null, null, null, "유지", null, null, null, null, null, null)).isEmpty());
+        assertTrue(fields(new MealRequest(null, null, null, null, null, null, null, null, null, null)).isEmpty());
+        assertEquals(Set.of("goal"), fields(new MealRequest(null, null, null, "아무거나", null, null, null, null, null, null)));
+        assertEquals(Set.of("goal"), fields(new MealRequest(null, null, null, "", null, null, null, null, null, null)));
+
+    }
+
+    @Test
+    @DisplayName("식단 추천: 비회원 신체 정보는 가입과 같은 범위 안이어야 한다.")
+    void mealBodyInfo() {
+
+        assertTrue(fields(new MealRequest(null, null, null, null, null, yearsAgo(30), Gender.MALE, new BigDecimal("175"),
+                new BigDecimal("70"), ActivityLevel.MODERATE)).isEmpty());
+        assertEquals(Set.of("birthDate"),
+                fields(new MealRequest(null, null, null, null, null, yearsAgo(2), null, null, null, null)));
+        assertEquals(Set.of("birthDate"),
+                fields(new MealRequest(null, null, null, null, null, yearsAgo(121), null, null, null, null)));
+        assertEquals(Set.of("height"),
+                fields(new MealRequest(null, null, null, null, null, null, null, new BigDecimal("49"), null, null)));
+        assertEquals(Set.of("weight"),
+                fields(new MealRequest(null, null, null, null, null, null, null, null, new BigDecimal("301"), null)));
 
     }
 
