@@ -38,7 +38,7 @@
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
 | POST | /api/auth/login | 로그인 | loginId<br>password | body | 200<br>accessToken<br>refreshToken |
-| POST | /api/auth/signup | 회원가입 | nickname*<br>loginId*<br>password*<br>email*<br>age<br>gender<br>height<br>weight<br>activityLevel (신체활동계수) | body | 201<br>id |
+| POST | /api/auth/signup | 회원가입 | nickname*<br>loginId*<br>password*<br>email*<br>birthDate (yyyy-MM-dd, 만 3세 이상 120세 이하)<br>gender<br>height<br>weight<br>activityLevel (신체활동계수) | body | 201<br>id |
 | POST | /api/auth/forgot-password | 비밀번호 재설정 이메일 발송, 가입 여부와 관계없이 200 | email* | body | 200 |
 | POST | /api/auth/reset-password | 새 비밀번호로 변경 | token* (이메일로 보낼 일회용 본인 인증값)<br>newPassword* | body | 200 |
 | POST | /api/auth/refresh | accessToken 재발급 | refreshToken* | body | 200<br>accessToken |
@@ -51,8 +51,8 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /api/members/me | 내정보 조회 | - | - | 200<br>nickname<br>loginId<br>email<br>age<br>gender<br>height<br>weight<br>activityLevel |
-| PATCH | /api/members/me | 내정보 수정 | nickname<br>age<br>gender<br>height<br>weight<br>activityLevel | body | 200<br>nickname<br>loginId<br>email<br>age<br>gender<br>height<br>weight<br>activityLevel |
+| GET | /api/members/me | 내정보 조회 | - | - | 200<br>nickname<br>loginId<br>email<br>birthDate<br>gender<br>height<br>weight<br>activityLevel |
+| PATCH | /api/members/me | 내정보 수정 | nickname<br>birthDate<br>gender<br>height<br>weight<br>activityLevel | body | 200<br>nickname<br>loginId<br>email<br>birthDate<br>gender<br>height<br>weight<br>activityLevel |
 | DELETE | /api/members/me | 회원탈퇴 | - | - | 204 |
 
 ### 재료
