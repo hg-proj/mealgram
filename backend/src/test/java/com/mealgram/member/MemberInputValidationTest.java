@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -42,17 +43,23 @@ class MemberInputValidationTest {
 
     }
 
-    private SignupRequest signup(String password, Integer age, String height, String weight) {
+    private LocalDate yearsAgo(int years) {
 
-        return new SignupRequest("한결", "hangyeol01", password, age, null,
+        return LocalDate.now().minusYears(years);
+
+    }
+
+    private SignupRequest signup(String password, LocalDate birthDate, String height, String weight) {
+
+        return new SignupRequest("한결", "hangyeol01", password, birthDate, null,
                 height == null ? null : new BigDecimal(height), weight == null ? null : new BigDecimal(weight),
                 null, "test@example.com");
 
     }
 
-    private MemberUpdateRequest update(String nickname, Integer age, String height, String weight) {
+    private MemberUpdateRequest update(String nickname, LocalDate birthDate, String height, String weight) {
 
-        return new MemberUpdateRequest(nickname, age, null, height == null ? null : new BigDecimal(height),
+        return new MemberUpdateRequest(nickname, birthDate, null, height == null ? null : new BigDecimal(height),
                 weight == null ? null : new BigDecimal(weight), null);
 
     }
@@ -72,21 +79,22 @@ class MemberInputValidationTest {
     @DisplayName("가입: 규칙에 맞는 값은 통과한다.")
     void signupValid() {
 
-        assertTrue(fields(signup("password12!", 30, "160", "55")).isEmpty());
+        assertTrue(fields(signup("password12!", yearsAgo(30), "160", "55")).isEmpty());
         assertTrue(fields(signup("password12!", null, null, null)).isEmpty());
 
     }
 
     @Test
-    @DisplayName("가입: 나이, 키, 몸무게가 범위를 벗어나면 막는다.")
+    @DisplayName("가입: 생년월일, 키, 몸무게가 범위를 벗어나면 막는다.")
     void signupOutOfRange() {
 
-        assertEquals(Set.of("age"), fields(signup("password12!", 2, "160", "55")));
-        assertEquals(Set.of("age"), fields(signup("password12!", 121, "160", "55")));
-        assertEquals(Set.of("height"), fields(signup("password12!", 30, "49.9", "55")));
-        assertEquals(Set.of("height"), fields(signup("password12!", 30, "251", "55")));
-        assertEquals(Set.of("weight"), fields(signup("password12!", 30, "160", "9.9")));
-        assertEquals(Set.of("weight"), fields(signup("password12!", 30, "160", "300.1")));
+        assertEquals(Set.of("birthDate"), fields(signup("password12!", yearsAgo(2), "160", "55")));
+        assertEquals(Set.of("birthDate"), fields(signup("password12!", yearsAgo(121), "160", "55")));
+        assertEquals(Set.of("birthDate"), fields(signup("password12!", LocalDate.now().plusDays(1), "160", "55")));
+        assertEquals(Set.of("height"), fields(signup("password12!", yearsAgo(30), "49.9", "55")));
+        assertEquals(Set.of("height"), fields(signup("password12!", yearsAgo(30), "251", "55")));
+        assertEquals(Set.of("weight"), fields(signup("password12!", yearsAgo(30), "160", "9.9")));
+        assertEquals(Set.of("weight"), fields(signup("password12!", yearsAgo(30), "160", "300.1")));
 
     }
 
@@ -94,8 +102,17 @@ class MemberInputValidationTest {
     @DisplayName("가입: 3세, 120세와 경계값은 허용한다.")
     void signupBoundaries() {
 
-        assertTrue(fields(signup("password12!", 3, "50", "10")).isEmpty());
-        assertTrue(fields(signup("password12!", 120, "250", "300")).isEmpty());
+        assertTrue(fields(signup("password12!", yearsAgo(3), "50", "10")).isEmpty());
+        assertTrue(fields(signup("password12!", yearsAgo(120), "250", "300")).isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("가입: 생일이 하루 모자라 만 3세가 아니면 막고 하루 지나 만 120세면 허용한다.")
+    void signupBirthDateByDay() {
+
+        assertEquals(Set.of("birthDate"), fields(signup("password12!", yearsAgo(3).plusDays(1), "160", "55")));
+        assertTrue(fields(signup("password12!", yearsAgo(121).plusDays(1), "160", "55")).isEmpty());
 
     }
 
@@ -103,9 +120,9 @@ class MemberInputValidationTest {
     @DisplayName("가입: 비밀번호 규칙을 지키지 않으면 막는다.")
     void signupPassword() {
 
-        assertEquals(Set.of("password"), fields(signup("aaaaaaaaaa", 30, "160", "55")));
-        assertEquals(Set.of("password"), fields(signup("abc12345", 30, "160", "55")));
-        assertTrue(fields(signup("        ", 30, "160", "55")).contains("password"));
+        assertEquals(Set.of("password"), fields(signup("aaaaaaaaaa", yearsAgo(30), "160", "55")));
+        assertEquals(Set.of("password"), fields(signup("abc12345", yearsAgo(30), "160", "55")));
+        assertTrue(fields(signup("        ", yearsAgo(30), "160", "55")).contains("password"));
 
     }
 
@@ -114,7 +131,7 @@ class MemberInputValidationTest {
     void updateInvalid() {
 
         assertEquals(Set.of("nickname"), fields(update("          ", null, null, null)));
-        assertEquals(Set.of("age"), fields(update(null, 9999, null, null)));
+        assertEquals(Set.of("birthDate"), fields(update(null, LocalDate.of(1800, 1, 1), null, null)));
         assertEquals(Set.of("height", "weight"), fields(update(null, null, "-1", "0")));
 
     }
@@ -124,7 +141,7 @@ class MemberInputValidationTest {
     void updateEmptyIsValid() {
 
         assertTrue(fields(update(null, null, null, null)).isEmpty());
-        assertTrue(fields(update("한결이", 31, "165", "53.5")).isEmpty());
+        assertTrue(fields(update("한결이", yearsAgo(31), "165", "53.5")).isEmpty());
 
     }
 

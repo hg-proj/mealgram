@@ -1,7 +1,9 @@
 package com.mealgram.member;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -46,7 +48,7 @@ public class Member {
     @Column(nullable=false, length=255)
     private String password;
 
-    private Integer age;
+    private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
     @Column(length=10)
@@ -78,14 +80,21 @@ public class Member {
 
     }
 
-    public void updateProfile(String nickname, Integer age, Gender gender, BigDecimal height, BigDecimal weight,
-                              ActivityLevel activityLevel) {
+    // 만 나이, 생년월일이 없으면 null
+    public Integer ageOn(LocalDate today) {
+
+        return birthDate == null ? null : Period.between(birthDate, today).getYears();
+
+    }
+
+    public void updateProfile(String nickname, LocalDate birthDate, Gender gender, BigDecimal height,
+                              BigDecimal weight, ActivityLevel activityLevel) {
 
         if (nickname != null) {
             this.nickname = nickname;
         }
-        if (age != null) {
-            this.age = age;
+        if (birthDate != null) {
+            this.birthDate = birthDate;
         }
         if (gender != null) {
             this.gender = gender;

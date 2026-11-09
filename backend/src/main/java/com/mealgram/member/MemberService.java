@@ -33,8 +33,8 @@ public class MemberService {
     public MemberResponse update(Long memberId, MemberUpdateRequest request) {
 
         Member member = find(memberId);
-        member.updateProfile(request.nickname(), request.age(), request.gender(), request.height(),
-                request.weight(), request.activityLevel());
+        member.updateProfile(request.nickname(), request.birthDate(), request.gender(),
+                request.height(), request.weight(), request.activityLevel());
 
         return MemberResponse.from(member);
 

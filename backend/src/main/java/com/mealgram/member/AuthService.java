@@ -74,7 +74,7 @@ public class AuthService {
                 .nickname(request.nickname())
                 .loginId(request.loginId())
                 .password(encodedPassword)
-                .age(request.age())
+                .birthDate(request.birthDate())
                 .gender(request.gender())
                 .height(request.height())
                 .weight(request.weight())
