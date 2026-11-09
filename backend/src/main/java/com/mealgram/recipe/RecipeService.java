@@ -33,13 +33,25 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public RecipeResponse getDetail(Long recipeId, Long memberId) {
 
+        return detail(recipeId, new HashSet<>(memberIngredientRepository.findIngredientIdsByMemberId(memberId)));
+
+    }
+
+    @Transactional(readOnly = true)
+    public RecipeResponse getDetailForGuest(Long recipeId, List<Long> ingredientIds) {
+
+        return detail(recipeId, ingredientIds == null ? Set.of() : new HashSet<>(ingredientIds));
+
+    }
+
+    private RecipeResponse detail(Long recipeId, Set<Long> ownedIds) {
+
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RECIPE_NOT_FOUND));
 
         List<Ingredient> ingredients = recipeIngredientRepository.findByRecipeId(recipeId).stream()
                 .map(RecipeIngredient::getIngredient)
                 .toList();
-        Set<Long> ownedIds = new HashSet<>(memberIngredientRepository.findIngredientIdsByMemberId(memberId));
 
         List<String> seasonings = ingredients.stream()
                 .filter(this::isSeasoning)
