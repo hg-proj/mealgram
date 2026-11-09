@@ -1,14 +1,14 @@
 package com.mealgram.member.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
+import com.mealgram.common.validation.ValidBirthDate;
 import com.mealgram.member.Member.ActivityLevel;
 import com.mealgram.member.Member.Gender;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -20,9 +20,8 @@ public record MemberUpdateRequest(
     @Pattern(regexp=".*[^ \t\r\n].*", message="공백만 입력할 수 없습니다.")
     String nickname,
 
-    @Min(3)
-    @Max(120)
-    Integer age,
+    @ValidBirthDate
+    LocalDate birthDate,
 
     Gender gender,
 

@@ -1,16 +1,16 @@
 package com.mealgram.member.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import com.mealgram.member.Member.ActivityLevel;
 import com.mealgram.member.Member.Gender;
 
+import com.mealgram.common.validation.ValidBirthDate;
 import com.mealgram.common.validation.ValidPassword;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -32,9 +32,8 @@ public record SignupRequest (
     @ValidPassword
     String password,
 
-    @Min(3)
-    @Max(120)
-    Integer age,
+    @ValidBirthDate
+    LocalDate birthDate,
 
     Gender gender,
 

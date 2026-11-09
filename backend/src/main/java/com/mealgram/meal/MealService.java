@@ -1,6 +1,7 @@
 package com.mealgram.meal;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -125,7 +126,7 @@ public class MealService {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-        int daily = EnergyCalculator.dailyCalorie(member.getAge(), member.getGender(), member.getHeight(),
+        int daily = EnergyCalculator.dailyCalorie(member.ageOn(LocalDate.now()), member.getGender(), member.getHeight(),
                 member.getWeight(), member.getActivityLevel());
 
         return EnergyCalculator.mealCalorie(daily, goal);

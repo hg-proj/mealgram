@@ -1,6 +1,7 @@
 package com.mealgram.member.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.mealgram.member.Member;
 import com.mealgram.member.Member.ActivityLevel;
@@ -11,7 +12,7 @@ import com.mealgram.member.Member.Gender;
 public record MemberResponse(String nickname,
                              String loginId,
                              String email,
-                             Integer age,
+                             LocalDate birthDate,
                              Gender gender,
                              BigDecimal height,
                              BigDecimal weight,
@@ -19,7 +20,7 @@ public record MemberResponse(String nickname,
 
     public static MemberResponse from(Member member) {
 
-        return new MemberResponse(member.getNickname(), member.getLoginId(), member.getEmail(), member.getAge(),
+        return new MemberResponse(member.getNickname(), member.getLoginId(), member.getEmail(), member.getBirthDate(),
                 member.getGender(), member.getHeight(), member.getWeight(), member.getActivityLevel());
 
     }

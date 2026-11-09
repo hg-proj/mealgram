@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,8 @@ class MemberServiceTest {
         memberRepository = mock(MemberRepository.class);
         refreshTokenStore = mock(RefreshTokenStore.class);
         memberService = new MemberService(memberRepository, refreshTokenStore);
-        member = Member.builder().nickname("한결").loginId("hangyeol01").email("test@example.com").age(30)
+        member = Member.builder().nickname("한결").loginId("hangyeol01").email("test@example.com")
+                .birthDate(LocalDate.now().minusYears(30))
                 .gender(Gender.FEMALE).height(new BigDecimal("160")).weight(new BigDecimal("55"))
                 .activityLevel(ActivityLevel.LIGHT).build();
         when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
@@ -57,10 +59,11 @@ class MemberServiceTest {
     void updatesOnlyGivenFields() {
 
         MemberResponse response = memberService.update(1L,
-                new MemberUpdateRequest(null, 31, null, null, new BigDecimal("53.5"), ActivityLevel.MODERATE));
+                new MemberUpdateRequest(null, LocalDate.now().minusYears(31), null, null, new BigDecimal("53.5"),
+                        ActivityLevel.MODERATE));
 
         assertEquals("한결", response.nickname());
-        assertEquals(31, response.age());
+        assertEquals(LocalDate.now().minusYears(31), response.birthDate());
         assertEquals(Gender.FEMALE, response.gender());
         assertEquals(new BigDecimal("160"), response.height());
         assertEquals(new BigDecimal("53.5"), response.weight());

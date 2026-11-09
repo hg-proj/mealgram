@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -152,12 +153,18 @@ public abstract class IntegrationTestSupport {
 
     }
 
+    protected static String birthDateYearsAgo(int years) {
+
+        return LocalDate.now().minusYears(years).toString();
+
+    }
+
     protected Member signupAndLogin(String prefix) throws Exception {
 
         String loginId = unique(prefix);
         String email = loginId + "@example.com";
         postJson("/api/auth/signup", Map.of("nickname", "테스터", "loginId", loginId, "password", PASSWORD,
-                "email", email, "age", 30, "gender", "FEMALE", "height", 160, "weight", 55, "activityLevel", "LIGHT"), null);
+                "email", email, "birthDate", birthDateYearsAgo(30), "gender", "FEMALE", "height", 160, "weight", 55, "activityLevel", "LIGHT"), null);
         JsonNode login = body(postJson("/api/auth/login", Map.of("loginId", loginId, "password", PASSWORD), null));
 
         return new Member(loginId, email, login.get("accessToken").asString(), login.get("refreshToken").asString());

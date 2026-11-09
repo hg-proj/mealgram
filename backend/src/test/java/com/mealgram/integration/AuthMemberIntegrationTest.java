@@ -47,7 +47,8 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
 
         String loginId = unique("flow");
         MvcResult signup = postJson("/api/auth/signup", Map.of("nickname", "한결", "loginId", loginId, "password", password(),
-                "email", loginId.toUpperCase() + "@Example.COM", "age", 30, "gender", "FEMALE", "height", 160,
+                "email", loginId.toUpperCase() + "@Example.COM", "birthDate", birthDateYearsAgo(30), "gender", "FEMALE",
+                "height", 160,
                 "weight", 55, "activityLevel", "LIGHT"), null);
         assertEquals(201, status(signup));
 
@@ -56,7 +57,7 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
 
         assertEquals(loginId, me.get("loginId").asString());
         assertEquals(loginId + "@example.com", me.get("email").asString());
-        assertEquals(30, me.get("age").asInt());
+        assertEquals(birthDateYearsAgo(30), me.get("birthDate").asString());
         assertFalse(me.has("password"));
 
     }
@@ -84,13 +85,13 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
     void rejectsInvalidInput() throws Exception {
 
         MvcResult result = postJson("/api/auth/signup", Map.of("nickname", "한", "loginId", "ab", "password", "aaaaaaaa",
-                "email", "not-an-email", "age", 2, "height", 251, "weight", 9), null);
+                "email", "not-an-email", "birthDate", birthDateYearsAgo(2), "height", 251, "weight", 9), null);
 
         assertEquals(400, status(result));
         JsonNode error = body(result).get("error");
         assertEquals("VALIDATION_FAILED", error.get("code").asString());
         String fields = error.get("fieldErrors").toString();
-        for (String field : new String[] {"nickname", "loginId", "password", "email", "age", "height", "weight"}) {
+        for (String field : new String[] {"nickname", "loginId", "password", "email", "birthDate", "height", "weight"}) {
             assertTrue(fields.contains("\"" + field + "\""), field + " 오류가 없음: " + fields);
         }
 
@@ -104,11 +105,11 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
 
         JsonNode updated = body(patchJson("/api/members/me", Map.of("nickname", "새닉네임", "weight", 53.5), member.accessToken()));
         assertEquals("새닉네임", updated.get("nickname").asString());
-        assertEquals(30, updated.get("age").asInt());
+        assertEquals(birthDateYearsAgo(30), updated.get("birthDate").asString());
         assertEquals(53.5, updated.get("weight").asDouble());
 
         assertEquals(400, status(patchJson("/api/members/me", Map.of("nickname", "          "), member.accessToken())));
-        assertEquals(400, status(patchJson("/api/members/me", Map.of("age", 9999), member.accessToken())));
+        assertEquals(400, status(patchJson("/api/members/me", Map.of("birthDate", "1800-01-01"), member.accessToken())));
 
     }
 
