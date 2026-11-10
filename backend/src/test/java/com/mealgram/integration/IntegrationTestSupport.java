@@ -38,6 +38,7 @@ import tools.jackson.databind.json.JsonMapper;
         "recipe.import.enabled=true",
         "recipe.embedding.enabled=false",
         "rate-limit.meals.max-requests=3",
+        "rate-limit.meals.guest-max-requests=2",
         "rate-limit.meals.window-seconds=60",
         "app.frontend-url=http://localhost:5173"
 })

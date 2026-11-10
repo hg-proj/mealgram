@@ -36,8 +36,11 @@ public class MealController {
     public ResponseEntity<MealResponse> recommend(@Valid @RequestBody MealRequest request,
                                                   @AuthenticationPrincipal Long memberId) {
 
-        MealResponse response = mealService.recommend(memberId, request.requiredId(), request.subIds(),
-                request.ingredientId(), request.goal(), request.genre());
+        MealResponse response = memberId == null
+                ? mealService.recommendForGuest(request.requiredId(), request.subIds(), request.ingredientId(),
+                        request.goal(), request.genre(), request.bodyInfo())
+                : mealService.recommend(memberId, request.requiredId(), request.subIds(), request.ingredientId(),
+                        request.goal(), request.genre());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
 

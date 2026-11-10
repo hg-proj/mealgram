@@ -1,9 +1,12 @@
 package com.mealgram.recipe;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mealgram.recipe.dto.RecipeResponse;
@@ -20,9 +23,13 @@ public class RecipeController {
     }
 
     @GetMapping("/recipes/{id}")
-    public ResponseEntity<RecipeResponse> getDetail(@PathVariable Long id, @AuthenticationPrincipal Long memberId) {
+    public ResponseEntity<RecipeResponse> getDetail(@PathVariable Long id,
+                                                    @RequestParam(required = false) List<Long> ingredientIds,
+                                                    @AuthenticationPrincipal Long memberId) {
 
-        return ResponseEntity.ok(recipeService.getDetail(id, memberId));
+        return ResponseEntity.ok(memberId == null
+                ? recipeService.getDetailForGuest(id, ingredientIds)
+                : recipeService.getDetail(id, memberId));
 
     }
 

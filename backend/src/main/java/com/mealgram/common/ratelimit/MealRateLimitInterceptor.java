@@ -21,29 +21,34 @@ import jakarta.servlet.http.HttpServletResponse;
 public class MealRateLimitInterceptor implements HandlerInterceptor {
 
     private static final String KEY_PREFIX = "ratelimit:meals:";
+    private static final String GUEST_PREFIX = "guest:";
     private static final String RETRY_AFTER = "Retry-After";
 
     private final StringRedisTemplate redisTemplate;
     private final int maxRequests;
+    private final int guestMaxRequests;
     private final Duration window;
 
     public MealRateLimitInterceptor(StringRedisTemplate redisTemplate,
                                     @Value("${rate-limit.meals.max-requests}") int maxRequests,
+                                    @Value("${rate-limit.meals.guest-max-requests}") int guestMaxRequests,
                                     @Value("${rate-limit.meals.window-seconds}") long windowSeconds) {
         this.redisTemplate = redisTemplate;
         this.maxRequests = maxRequests;
+        this.guestMaxRequests = guestMaxRequests;
         this.window = Duration.ofSeconds(windowSeconds);
     }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
-        Long memberId = currentMemberId();
-        if (!"POST".equals(request.getMethod()) || memberId == null) {
+        if (!"POST".equals(request.getMethod())) {
             return true;
         }
 
-        String key = KEY_PREFIX + memberId;
+        Long memberId = currentMemberId();
+        String key = memberId == null ? KEY_PREFIX + GUEST_PREFIX + request.getRemoteAddr() : KEY_PREFIX + memberId;
+        int limit = memberId == null ? guestMaxRequests : maxRequests;
         Long count = redisTemplate.opsForValue().increment(key);
         if (count == null) {
             return true;
@@ -52,7 +57,7 @@ public class MealRateLimitInterceptor implements HandlerInterceptor {
             redisTemplate.expire(key, window);
         }
 
-        if (count > maxRequests) {
+        if (count > limit) {
             Long remaining = redisTemplate.getExpire(key);
             response.setHeader(RETRY_AFTER, String.valueOf(remaining == null || remaining < 1 ? 1 : remaining));
             throw new BusinessException(ErrorCode.RATE_LIMIT_EXCEEDED);

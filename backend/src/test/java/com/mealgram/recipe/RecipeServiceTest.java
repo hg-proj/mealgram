@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -72,6 +73,34 @@ class RecipeServiceTest {
         RecipeResponse response = service.getDetail(1L, 1L);
 
         assertEquals(List.of("대파"), response.missingIngredients());
+
+    }
+
+    @Test
+    @DisplayName("비회원은 보낸 재료 번호로 부족 재료를 계산한다.")
+    void guestUsesGivenIngredientIds() {
+
+        when(recipeIngredientRepository.findByRecipeId(1L)).thenReturn(List.of(
+                link(10L, "두부", "두류"), link(11L, "대파", "채소류")));
+
+        RecipeResponse response = service.getDetailForGuest(1L, List.of(10L));
+
+        assertEquals(List.of("대파"), response.missingIngredients());
+        verifyNoInteractions(memberIngredientRepository);
+
+    }
+
+    @Test
+    @DisplayName("비회원이 재료를 보내지 않으면 모든 재료가 부족하다고 알린다.")
+    void guestWithoutIngredientIdsMissesEverything() {
+
+        when(recipeIngredientRepository.findByRecipeId(1L)).thenReturn(List.of(
+                link(10L, "두부", "두류"), link(20L, "간장", Ingredient.SEASONING_CATEGORY)));
+
+        RecipeResponse response = service.getDetailForGuest(1L, null);
+
+        assertEquals(List.of("두부"), response.missingIngredients());
+        assertEquals(List.of("간장"), response.seasonings());
 
     }
 

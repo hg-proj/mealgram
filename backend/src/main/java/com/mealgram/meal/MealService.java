@@ -19,6 +19,7 @@ import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.exception.ExternalApiException;
 import com.mealgram.common.llm.LlmClient;
+import com.mealgram.meal.dto.BodyInfo;
 import com.mealgram.meal.dto.MealCandidate;
 import com.mealgram.meal.dto.MealRecipe;
 import com.mealgram.meal.dto.MealResponse;
@@ -76,23 +77,62 @@ public class MealService {
                                   String goal,
                                   String genre) {
 
-        long start = System.currentTimeMillis();
         int targetCalorie = targetCalorie(memberId, goal);
+        MealResponse response = compose(UUID.randomUUID().toString(), "회원 " + memberId, requiredId, subIds,
+                mainIngredientId, goal, genre, targetCalorie);
+        redisTemplate.opsForValue().set(KEY_PREFIX + response.id(),
+                jsonMapper.writeValueAsString(new StoredMeal(memberId, response)), RESULT_TTL);
+
+        return response;
+
+    }
+
+    public MealResponse recommendForGuest(Long requiredId,
+                                          List<Long> subIds,
+                                          Long mainIngredientId,
+                                          String goal,
+                                          String genre,
+                                          BodyInfo body) {
+
+        int targetCalorie = EnergyCalculator.mealCalorie(dailyCalorie(body), goal);
+
+        return compose(null, "비회원", requiredId, subIds, mainIngredientId, goal, genre, targetCalorie);
+
+    }
+
+    private MealResponse compose(String id,
+                                 String owner,
+                                 Long requiredId,
+                                 List<Long> subIds,
+                                 Long mainIngredientId,
+                                 String goal,
+                                 String genre,
+                                 int targetCalorie) {
+
+        long start = System.currentTimeMillis();
         RecipeSearchResult found = recipeSearchService.search(requiredId, subIds, mainIngredientId, goal, genre);
         List<RecipeCandidate> candidates = found.candidates();
         if (candidates.isEmpty()) {
             throw new BusinessException(ErrorCode.RECIPE_CANDIDATE_NOT_FOUND);
         }
 
-        MealResponse response = new MealResponse(UUID.randomUUID().toString(), found.relaxed(),
-                generate(candidates, goal, genre, targetCalorie));
-        redisTemplate.opsForValue().set(KEY_PREFIX + response.id(),
-                jsonMapper.writeValueAsString(new StoredMeal(memberId, response)), RESULT_TTL);
+        MealResponse response = new MealResponse(id, found.relaxed(), generate(candidates, goal, genre, targetCalorie));
 
-        log.info("식단 추천 완료: 회원 {}, 후보 {}개, 조건 완화 {}, {}ms", memberId, candidates.size(), found.relaxed(),
+        log.info("식단 추천 완료: {}, 후보 {}개, 조건 완화 {}, {}ms", owner, candidates.size(), found.relaxed(),
                 System.currentTimeMillis() - start);
 
         return response;
+
+    }
+
+    private static int dailyCalorie(BodyInfo body) {
+
+        if (body == null) {
+            return EnergyCalculator.DEFAULT_DAILY_CALORIE;
+        }
+
+        return EnergyCalculator.dailyCalorie(body.ageOn(LocalDate.now()), body.gender(), body.height(), body.weight(),
+                body.activityLevel());
 
     }
 

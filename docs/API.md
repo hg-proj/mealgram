@@ -61,7 +61,7 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /api/ingredients | 전체 재료 검색(자동완성) | keyword<br>page, size | 쿼리 | 200<br>id<br>name |
+| GET | /api/ingredients | 전체 재료 검색(자동완성), 로그인 없이 가능 | keyword<br>page, size | 쿼리 | 200<br>id<br>name |
 | GET | /api/members/me/ingredients | 내 재료 목록 | page, size | 쿼리 | 200<br>id (내 재료 번호, 삭제할 때 사용)<br>ingredientId (재료 id, 식단 추천 요청에 사용)<br>name |
 | POST | /api/members/me/ingredients | 내 재료 등록 | ingredientId* | body | 201<br>id |
 | DELETE | /api/members/me/ingredients/{id} | 내 재료 삭제 | - | 경로변수 | 204 (다른 회원 소유 id면 404) |
@@ -72,9 +72,9 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| POST | /api/meals | 식단 추천 요청 | requiredId<br>subIds[]<br>ingredientId<br>goal 다이어트, 벌크업, 유지 중 하나<br>genre | body | 201<br>id<br>relaxed<br>candidates[] 항상 3개 |
+| POST | /api/meals | 식단 추천 요청, 로그인 없이 가능 | requiredId<br>subIds[]<br>ingredientId<br>goal 다이어트, 벌크업, 유지 중 하나<br>genre<br>birthDate, gender, height, weight, activityLevel 비회원만 사용, 비우면 기본 열량으로 계산 | body | 201<br>id 비회원은 null<br>relaxed<br>candidates[] 항상 3개 |
 | GET | /api/meals/samples | 랜덤 식단 3개, 로그인 없이 조회 | - | - | 200<br>goal 다이어트, 유지, 벌크업 순서<br>title<br>recipes[] id, name, category, imageUrl, portion<br>nutrition 추천 결과의 nutrition과 같음 |
-| GET | /api/meals/{id} | 특정 추천 결과 다시 조회 | - | 경로변수 | 200<br>id<br>relaxed (조건 완화 여부)<br>candidates[] |
+| GET | /api/meals/{id} | 특정 추천 결과 다시 조회, 회원만 | - | 경로변수 | 200<br>id<br>relaxed (조건 완화 여부)<br>candidates[] |
 
 candidates[] 항목
 
@@ -92,7 +92,7 @@ candidates[] 항목
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /api/recipes/{id} | 레시피 상세와 부족 재료 | - | 경로변수 | 200<br>id, name, category, cookingMethod<br>calorie, carbohydrate, protein, fat, sodium 영양 정보가 없으면 null<br>cookingSteps<br>imageUrl /images/recipes/{id}.webp, 없으면 null<br>missingIngredients[] 양념 제외한 부족 재료<br>seasonings[] 필요한 양념 |
+| GET | /api/recipes/{id} | 레시피 상세와 부족 재료, 로그인 없이 가능 | ingredientIds[] 비회원이 고른 재료, 회원은 내 재료 기준 | 경로변수, 쿼리 | 200<br>id, name, category, cookingMethod<br>calorie, carbohydrate, protein, fat, sodium 영양 정보가 없으면 null<br>cookingSteps<br>imageUrl /images/recipes/{id}.webp, 없으면 null<br>missingIngredients[] 양념 제외한 부족 재료<br>seasonings[] 필요한 양념 |
 
 ### 저장식단
 마이페이지 - 내 식단
