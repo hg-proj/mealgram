@@ -4,6 +4,7 @@ export const paths = {
   home: '/',
   login: '/login',
   signup: '/signup',
+  forgotPassword: '/forgot-password',
   ingredient: '/ingredients',
   mealList: '/meals',
   myPage: '/mypage',
