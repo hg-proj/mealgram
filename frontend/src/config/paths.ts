@@ -5,6 +5,8 @@ export const paths = {
   login: '/login',
   signup: '/signup',
   forgotPassword: '/forgot-password',
+  terms: '/terms',
+  privacy: '/privacy',
   ingredient: '/ingredients',
   mealList: '/meals',
   myPage: '/mypage',
