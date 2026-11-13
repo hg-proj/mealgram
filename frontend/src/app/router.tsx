@@ -4,7 +4,7 @@ import Layout from '@/components/layout/Layout';
 import ErrorPage from '@/routes/ErrorPage';
 import Main from '@/routes/Main';
 
-// 라우트 정의, 로그인 화면은 들어갈 때 불러옴
+// 라우트 정의, 로그인과 가입 화면은 들어갈 때 불러옴
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +14,10 @@ export const router = createBrowserRouter([
       {
         path: paths.login,
         lazy: async () => ({ Component: (await import('@/routes/Login')).default }),
+      },
+      {
+        path: paths.signup,
+        lazy: async () => ({ Component: (await import('@/routes/Signup')).default }),
       },
       { path: '*', element: <ErrorPage status={404} /> },
     ],
