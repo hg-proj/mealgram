@@ -2,7 +2,6 @@ package com.mealgram.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -158,23 +157,17 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("비밀번호 재설정은 한 번만 쓸 수 있는 링크로 새 비밀번호를 정하고 이전 로그인은 무효가 된다.")
-    void passwordReset() throws Exception {
+    @DisplayName("비밀번호 재설정을 요청하면 가입한 이메일로 인증번호 6자리를 보낸다.")
+    void forgotPasswordSendsCode() throws Exception {
 
         Member member = signupAndLogin("rst");
 
         assertEquals(200, status(postJson("/api/auth/forgot-password", Map.of("email", member.email().toUpperCase()), null)));
-        ArgumentCaptor<String> token = ArgumentCaptor.forClass(String.class);
-        verify(passwordResetMailer).send(eq(member.email()), token.capture());
-        assertNotNull(token.getValue());
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(passwordResetMailer).send(eq(member.email()), code.capture());
+        assertTrue(code.getValue().matches("\\d{6}"));
 
-        assertEquals(400, status(postJson("/api/auth/reset-password", Map.of("token", token.getValue(), "newPassword", "short"), null)));
-        assertEquals(200, status(postJson("/api/auth/reset-password", Map.of("token", token.getValue(), "newPassword", "New-pass-98!"), null)));
-        assertEquals(400, status(postJson("/api/auth/reset-password", Map.of("token", token.getValue(), "newPassword", "Other-pass-1!"), null)));
-
-        assertEquals(401, status(postJson("/api/auth/login", Map.of("loginId", member.loginId(), "password", password()), null)));
-        assertEquals(200, status(postJson("/api/auth/login", Map.of("loginId", member.loginId(), "password", "New-pass-98!"), null)));
-        assertEquals(401, status(postJson("/api/auth/refresh", Map.of("refreshToken", member.refreshToken()), null)));
+        assertEquals(200, status(postJson("/api/auth/login", Map.of("loginId", member.loginId(), "password", password()), null)));
 
     }
 

@@ -1,7 +1,6 @@
 package com.mealgram.member;
 
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.Locale;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +11,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.LoginAttemptStore;
+import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
@@ -34,23 +34,25 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenStore refreshTokenStore;
     private final PasswordResetTokenStore passwordResetTokenStore;
+    private final PasswordResetCodeStore passwordResetCodeStore;
     private final PasswordResetMailer passwordResetMailer;
     private final LoginAttemptStore loginAttemptStore;
     private final String dummyHash;
 
     private static final String DUMMY_PASSWORD = "mealgram-dummy-password";
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final int RESET_TOKEN_BYTES = 32;
+    private static final int RESET_CODE_BOUND = 1_000_000;
 
     public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider, RefreshTokenStore refreshTokenStore,
-                       PasswordResetTokenStore passwordResetTokenStore, PasswordResetMailer passwordResetMailer,
-                       LoginAttemptStore loginAttemptStore) {
+                       PasswordResetTokenStore passwordResetTokenStore, PasswordResetCodeStore passwordResetCodeStore,
+                       PasswordResetMailer passwordResetMailer, LoginAttemptStore loginAttemptStore) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenStore = refreshTokenStore;
         this.passwordResetTokenStore = passwordResetTokenStore;
+        this.passwordResetCodeStore = passwordResetCodeStore;
         this.passwordResetMailer = passwordResetMailer;
         this.loginAttemptStore = loginAttemptStore;
         this.dummyHash = passwordEncoder.encode(DUMMY_PASSWORD);
@@ -139,9 +141,9 @@ public class AuthService {
                 return;
             }
 
-            String token = generateResetToken();
-            passwordResetTokenStore.save(member.getId(), token);
-            passwordResetMailer.send(member.getEmail(), token);
+            String code = generateResetCode();
+            passwordResetCodeStore.save(member.getId(), code);
+            passwordResetMailer.send(member.getEmail(), code);
         });
     }
 
@@ -163,12 +165,10 @@ public class AuthService {
 
     }
 
-    private String generateResetToken() {
+    private String generateResetCode() {
 
-        byte[] bytes = new byte[RESET_TOKEN_BYTES];
-        RANDOM.nextBytes(bytes);
+        return String.format("%06d", RANDOM.nextInt(RESET_CODE_BOUND));
 
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     private Long findStoredMemberId(String refreshToken) {

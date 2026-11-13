@@ -25,6 +25,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.LoginAttemptStore;
+import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
@@ -44,6 +45,7 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     private RefreshTokenStore refreshTokenStore;
     private PasswordResetTokenStore passwordResetTokenStore;
+    private PasswordResetCodeStore passwordResetCodeStore;
     private PasswordResetMailer passwordResetMailer;
     private JwtTokenProvider provider;
     private AuthService authService;
@@ -56,9 +58,10 @@ class AuthServiceTest {
         refreshTokenStore = mock(RefreshTokenStore.class);
         provider = new JwtTokenProvider(Encoders.BASE64.encode(Jwts.SIG.HS256.key().build().getEncoded()));
         passwordResetTokenStore = mock(PasswordResetTokenStore.class);
+        passwordResetCodeStore = mock(PasswordResetCodeStore.class);
         passwordResetMailer = mock(PasswordResetMailer.class);
         authService = new AuthService(memberRepository, passwordEncoder, provider, refreshTokenStore,
-                passwordResetTokenStore, passwordResetMailer, mock(LoginAttemptStore.class));
+                passwordResetTokenStore, passwordResetCodeStore, passwordResetMailer, mock(LoginAttemptStore.class));
 
     }
 
@@ -182,8 +185,8 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("가입된 이메일이면 재설정 토큰을 보관하고 메일을 보낸다.")
-    void savesTokenAndSendsMail() {
+    @DisplayName("가입된 이메일이면 인증번호를 보관하고 메일을 보낸다.")
+    void savesCodeAndSendsMail() {
 
         Member member = Member.builder().id(1L).email("a@example.com").build();
         when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
@@ -193,27 +196,28 @@ class AuthServiceTest {
 
         ArgumentCaptor<String> saved = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
-        verify(passwordResetTokenStore).save(eq(1L), saved.capture());
+        verify(passwordResetCodeStore).save(eq(1L), saved.capture());
         verify(passwordResetMailer).send(eq("a@example.com"), sent.capture());
         assertEquals(saved.getValue(), sent.getValue());
-        assertEquals(43, saved.getValue().length());
+        assertTrue(saved.getValue().matches("\\d{6}"));
 
     }
 
     @Test
-    @DisplayName("요청할 때마다 다른 토큰을 만든다.")
-    void createsDifferentTokens() {
+    @DisplayName("인증번호는 항상 숫자 6자리로 만든다.")
+    void createsSixDigitCodes() {
 
         Member member = Member.builder().id(1L).email("a@example.com").build();
         when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
         when(passwordResetTokenStore.acquireCooldown(1L)).thenReturn(true);
 
-        authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
-        authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
+        for (int i = 0; i < 20; i++) {
+            authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
+        }
 
-        ArgumentCaptor<String> tokens = ArgumentCaptor.forClass(String.class);
-        verify(passwordResetTokenStore, org.mockito.Mockito.times(2)).save(eq(1L), tokens.capture());
-        assertTrue(!tokens.getAllValues().get(0).equals(tokens.getAllValues().get(1)));
+        ArgumentCaptor<String> codes = ArgumentCaptor.forClass(String.class);
+        verify(passwordResetCodeStore, org.mockito.Mockito.times(20)).save(eq(1L), codes.capture());
+        assertTrue(codes.getAllValues().stream().allMatch(code -> code.matches("\\d{6}")));
 
     }
 
@@ -225,7 +229,7 @@ class AuthServiceTest {
 
         authService.forgotPassword(new ForgotPasswordRequest("none@example.com"));
 
-        verify(passwordResetTokenStore, never()).save(anyLong(), anyString());
+        verify(passwordResetCodeStore, never()).save(anyLong(), anyString());
         verify(passwordResetMailer, never()).send(anyString(), anyString());
 
     }
@@ -240,7 +244,7 @@ class AuthServiceTest {
 
         authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
 
-        verify(passwordResetTokenStore, never()).save(anyLong(), anyString());
+        verify(passwordResetCodeStore, never()).save(anyLong(), anyString());
         verify(passwordResetMailer, never()).send(anyString(), anyString());
 
     }
