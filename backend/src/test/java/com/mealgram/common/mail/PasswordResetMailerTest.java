@@ -34,20 +34,20 @@ class PasswordResetMailerTest {
     }
 
     @Test
-    @DisplayName("메일 설정이 있으면 재설정 링크가 담긴 메일을 보낸다.")
-    void sendsMailWithLink() {
+    @DisplayName("메일 설정이 있으면 인증번호가 담긴 메일을 보낸다.")
+    void sendsMailWithCode() {
 
         when(provider.getIfAvailable()).thenReturn(mailSender);
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "noreply@mealgram.test", false);
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "noreply@mealgram.test", false);
 
-        mailer.send("a@example.com", "TOKEN123");
+        mailer.send("a@example.com", "123456");
 
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender).send(captor.capture());
         SimpleMailMessage message = captor.getValue();
         assertEquals("noreply@mealgram.test", message.getFrom());
         assertEquals("a@example.com", message.getTo()[0]);
-        assertTrue(message.getText().contains("https://mealgram.test/reset-password?token=TOKEN123"));
+        assertTrue(message.getText().contains("123456"));
 
     }
 
@@ -56,9 +56,9 @@ class PasswordResetMailerTest {
     void omitsFromWhenBlank() {
 
         when(provider.getIfAvailable()).thenReturn(mailSender);
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "", false);
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "", false);
 
-        mailer.send("a@example.com", "TOKEN123");
+        mailer.send("a@example.com", "123456");
 
         ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender).send(captor.capture());
@@ -71,9 +71,9 @@ class PasswordResetMailerTest {
     void doesNothingWithoutMailSender() {
 
         when(provider.getIfAvailable()).thenReturn(null);
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "", false);
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "", false);
 
-        assertDoesNotThrow(() -> mailer.send("a@example.com", "TOKEN123"));
+        assertDoesNotThrow(() -> mailer.send("a@example.com", "123456"));
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
 
     }
@@ -84,9 +84,9 @@ class PasswordResetMailerTest {
 
         when(provider.getIfAvailable()).thenReturn(mailSender);
         doThrow(new MailSendException("실패")).when(mailSender).send(any(SimpleMailMessage.class));
-        PasswordResetMailer mailer = new PasswordResetMailer(provider, "https://mealgram.test", "", false);
+        PasswordResetMailer mailer = new PasswordResetMailer(provider, "", false);
 
-        assertDoesNotThrow(() -> mailer.send("a@example.com", "TOKEN123"));
+        assertDoesNotThrow(() -> mailer.send("a@example.com", "123456"));
 
     }
 

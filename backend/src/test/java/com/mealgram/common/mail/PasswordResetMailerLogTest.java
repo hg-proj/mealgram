@@ -26,7 +26,7 @@ import ch.qos.logback.core.read.ListAppender;
 class PasswordResetMailerLogTest {
 
     private static final String EMAIL = "secret.person@example.com";
-    private static final String TOKEN = "TOKEN-VALUE-123";
+    private static final String CODE = "482913";
 
     private ListAppender<ILoggingEvent> appender;
     private Logger logger;
@@ -60,26 +60,26 @@ class PasswordResetMailerLogTest {
     }
 
     @Test
-    @DisplayName("개발 설정에서 메일 설정이 없으면 재설정 링크를 로그에 남긴다.")
-    void devLogsLinkWithoutMailSender() {
+    @DisplayName("개발 설정에서 메일 설정이 없으면 인증번호를 로그에 남긴다.")
+    void devLogsCodeWithoutMailSender() {
 
         when(provider.getIfAvailable()).thenReturn(null);
 
-        new PasswordResetMailer(provider, "https://mealgram.test", "", true).send(EMAIL, TOKEN);
+        new PasswordResetMailer(provider, "", true).send(EMAIL, CODE);
 
-        assertTrue(logged().contains("https://mealgram.test/reset-password?token=" + TOKEN));
+        assertTrue(logged().contains(CODE));
 
     }
 
     @Test
-    @DisplayName("운영 설정에서 메일 설정이 없으면 링크와 이메일 없이 오류만 남긴다.")
+    @DisplayName("운영 설정에서 메일 설정이 없으면 인증번호와 이메일 없이 오류만 남긴다.")
     void prodLogsOnlyErrorWithoutMailSender() {
 
         when(provider.getIfAvailable()).thenReturn(null);
 
-        new PasswordResetMailer(provider, "https://mealgram.test", "", false).send(EMAIL, TOKEN);
+        new PasswordResetMailer(provider, "", false).send(EMAIL, CODE);
 
-        assertFalse(logged().contains(TOKEN));
+        assertFalse(logged().contains(CODE));
         assertFalse(logged().contains(EMAIL));
         assertTrue(logged().contains("메일 설정이 없어"));
 
@@ -93,10 +93,10 @@ class PasswordResetMailerLogTest {
         when(provider.getIfAvailable()).thenReturn(mailSender);
         doThrow(new MailSendException("연결 실패")).when(mailSender).send(any(SimpleMailMessage.class));
 
-        new PasswordResetMailer(provider, "https://mealgram.test", "", false).send(EMAIL, TOKEN);
+        new PasswordResetMailer(provider, "", false).send(EMAIL, CODE);
 
         assertFalse(logged().contains(EMAIL));
-        assertFalse(logged().contains(TOKEN));
+        assertFalse(logged().contains(CODE));
         assertTrue(logged().contains("재설정 메일 발송에 실패했습니다"));
 
     }

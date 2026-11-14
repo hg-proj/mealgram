@@ -23,6 +23,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.LoginAttemptStore;
+import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
@@ -32,6 +33,7 @@ class EmailNormalizationTest {
 
     private MemberRepository memberRepository;
     private PasswordResetTokenStore passwordResetTokenStore;
+    private PasswordResetCodeStore passwordResetCodeStore;
     private PasswordResetMailer passwordResetMailer;
     private AuthService authService;
 
@@ -40,9 +42,11 @@ class EmailNormalizationTest {
 
         memberRepository = mock(MemberRepository.class);
         passwordResetTokenStore = mock(PasswordResetTokenStore.class);
+        passwordResetCodeStore = mock(PasswordResetCodeStore.class);
         passwordResetMailer = mock(PasswordResetMailer.class);
         authService = new AuthService(memberRepository, mock(PasswordEncoder.class), mock(JwtTokenProvider.class),
-                mock(RefreshTokenStore.class), passwordResetTokenStore, passwordResetMailer, mock(LoginAttemptStore.class));
+                mock(RefreshTokenStore.class), passwordResetTokenStore, passwordResetCodeStore, passwordResetMailer,
+                mock(LoginAttemptStore.class));
 
     }
 
@@ -88,7 +92,7 @@ class EmailNormalizationTest {
 
         authService.forgotPassword(new ForgotPasswordRequest("Han@EXAMPLE.com"));
 
-        verify(passwordResetTokenStore).save(anyLong(), anyString());
+        verify(passwordResetCodeStore).save(anyLong(), anyString());
         verify(passwordResetMailer).send(anyString(), anyString());
 
     }

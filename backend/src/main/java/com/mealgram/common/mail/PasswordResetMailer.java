@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
-// 비밀번호 재설정 메일 발송
+// 비밀번호 재설정 인증번호 메일 발송
 
 @Slf4j
 @Component
 public class PasswordResetMailer {
 
-    private static final String SUBJECT = "[mealgram] 비밀번호 재설정 안내";
+    private static final String SUBJECT = "[mealgram] 비밀번호 재설정 인증번호";
     private static final String BODY = """
-            mealgram 비밀번호 재설정 링크입니다.
-            아래 링크에서 30분 안에 새 비밀번호를 설정해 주세요.
+            mealgram 비밀번호 재설정 인증번호입니다.
+            아래 인증번호를 10분 안에 입력해 주세요.
 
             %s
 
@@ -27,27 +27,23 @@ public class PasswordResetMailer {
             """;
 
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
-    private final String frontendUrl;
     private final String from;
-    private final boolean logResetLink;
+    private final boolean logResetCode;
 
     public PasswordResetMailer(ObjectProvider<JavaMailSender> mailSenderProvider,
-                               @Value("${app.frontend-url}") String frontendUrl,
                                @Value("${spring.mail.username:}") String from,
-                               @Value("${app.reset-link-log:false}") boolean logResetLink) {
+                               @Value("${app.reset-code-log:false}") boolean logResetCode) {
         this.mailSenderProvider = mailSenderProvider;
-        this.frontendUrl = frontendUrl;
         this.from = from;
-        this.logResetLink = logResetLink;
+        this.logResetCode = logResetCode;
     }
 
-    public void send(String email, String token) {
+    public void send(String email, String code) {
 
-        String link = frontendUrl + "/reset-password?token=" + token;
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
         if (mailSender == null) {
-            if (logResetLink) {
-                log.info("메일 설정이 없어 재설정 링크를 로그로만 남깁니다. 수신 {}, 링크 {}", email, link);
+            if (logResetCode) {
+                log.info("메일 설정이 없어 인증번호를 로그로만 남깁니다. 수신 {}, 인증번호 {}", email, code);
             } else {
                 log.error("메일 설정이 없어 재설정 메일을 보내지 못했습니다.");
             }
@@ -60,7 +56,7 @@ public class PasswordResetMailer {
         }
         message.setTo(email);
         message.setSubject(SUBJECT);
-        message.setText(BODY.formatted(link));
+        message.setText(BODY.formatted(code));
 
         try {
             mailSender.send(message);

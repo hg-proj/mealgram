@@ -21,6 +21,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.LoginAttemptStore;
+import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.LoginRequest;
@@ -44,7 +45,8 @@ class LoginProtectionTest {
         when(provider.generateAccessToken(1L)).thenReturn("access");
         when(provider.generateRefreshToken(1L)).thenReturn("refresh");
         authService = new AuthService(memberRepository, passwordEncoder, provider, mock(RefreshTokenStore.class),
-                mock(PasswordResetTokenStore.class), mock(PasswordResetMailer.class), loginAttemptStore);
+                mock(PasswordResetTokenStore.class), mock(PasswordResetCodeStore.class), mock(PasswordResetMailer.class),
+                loginAttemptStore);
 
     }
 

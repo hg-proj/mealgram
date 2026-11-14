@@ -35,13 +35,13 @@ class PasswordResetTokenStoreTest {
     }
 
     @Test
-    @DisplayName("토큰을 30분 동안 보관한다.")
+    @DisplayName("토큰을 10분 동안 보관한다.")
     void savesForThirtyMinutes() {
 
         store.save(1L, "new");
 
-        verify(valueOperations).set("pwreset:token:new", "1", Duration.ofMinutes(30));
-        verify(valueOperations).set("pwreset:member:1", "new", Duration.ofMinutes(30));
+        verify(valueOperations).set("pwreset:token:new", "1", Duration.ofMinutes(10));
+        verify(valueOperations).set("pwreset:member:1", "new", Duration.ofMinutes(10));
         verify(redisTemplate, never()).delete("pwreset:token:null");
 
     }

@@ -14,7 +14,7 @@ public class PasswordResetTokenStore {
     private static final String TOKEN_KEY_PREFIX = "pwreset:token:";
     private static final String MEMBER_KEY_PREFIX = "pwreset:member:";
     private static final String COOLDOWN_KEY_PREFIX = "pwreset:cooldown:";
-    private static final Duration TOKEN_TTL = Duration.ofMinutes(30);
+    private static final Duration TOKEN_TTL = Duration.ofMinutes(10);
     private static final Duration COOLDOWN = Duration.ofSeconds(60);
 
     private final StringRedisTemplate redisTemplate;

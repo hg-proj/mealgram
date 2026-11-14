@@ -12,6 +12,7 @@ import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.mail.PasswordResetMailer;
 import com.mealgram.common.security.JwtTokenProvider;
 import com.mealgram.common.security.LoginAttemptStore;
+import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
@@ -23,6 +24,8 @@ import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
+import com.mealgram.member.dto.VerifyResetCodeRequest;
+import com.mealgram.member.dto.VerifyResetCodeResponse;
 
 // 회원가입, 로그인, 토큰 재발급, 로그아웃, 비밀번호 재설정 처리 서비스
 
@@ -34,23 +37,26 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenStore refreshTokenStore;
     private final PasswordResetTokenStore passwordResetTokenStore;
+    private final PasswordResetCodeStore passwordResetCodeStore;
     private final PasswordResetMailer passwordResetMailer;
     private final LoginAttemptStore loginAttemptStore;
     private final String dummyHash;
 
     private static final String DUMMY_PASSWORD = "mealgram-dummy-password";
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final int RESET_CODE_BOUND = 1_000_000;
     private static final int RESET_TOKEN_BYTES = 32;
 
     public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider, RefreshTokenStore refreshTokenStore,
-                       PasswordResetTokenStore passwordResetTokenStore, PasswordResetMailer passwordResetMailer,
-                       LoginAttemptStore loginAttemptStore) {
+                       PasswordResetTokenStore passwordResetTokenStore, PasswordResetCodeStore passwordResetCodeStore,
+                       PasswordResetMailer passwordResetMailer, LoginAttemptStore loginAttemptStore) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenStore = refreshTokenStore;
         this.passwordResetTokenStore = passwordResetTokenStore;
+        this.passwordResetCodeStore = passwordResetCodeStore;
         this.passwordResetMailer = passwordResetMailer;
         this.loginAttemptStore = loginAttemptStore;
         this.dummyHash = passwordEncoder.encode(DUMMY_PASSWORD);
@@ -139,10 +145,33 @@ public class AuthService {
                 return;
             }
 
-            String token = generateResetToken();
-            passwordResetTokenStore.save(member.getId(), token);
-            passwordResetMailer.send(member.getEmail(), token);
+            String code = generateResetCode();
+            passwordResetCodeStore.save(member.getId(), code);
+            passwordResetMailer.send(member.getEmail(), code);
         });
+    }
+
+    public VerifyResetCodeResponse verifyResetCode(VerifyResetCodeRequest request) {
+
+        String email = normalizeEmail(request.email());
+
+        if (passwordResetCodeStore.isBlocked(email)) {
+            throw new BusinessException(ErrorCode.RESET_CODE_BLOCKED);
+        }
+
+        Member member = memberRepository.findByEmail(email).orElse(null);
+
+        if (member == null || !passwordResetCodeStore.consume(member.getId(), request.code())) {
+            passwordResetCodeStore.recordFailure(email);
+            throw new BusinessException(ErrorCode.INVALID_RESET_CODE);
+        }
+
+        passwordResetCodeStore.resetFailures(email);
+
+        String token = generateResetToken();
+        passwordResetTokenStore.save(member.getId(), token);
+
+        return new VerifyResetCodeResponse(token);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
@@ -160,6 +189,12 @@ public class AuthService {
     private String normalizeEmail(String email) {
 
         return email.strip().toLowerCase(Locale.ROOT);
+
+    }
+
+    private String generateResetCode() {
+
+        return String.format("%06d", RANDOM.nextInt(RESET_CODE_BOUND));
 
     }
 

@@ -19,6 +19,7 @@ import com.mealgram.member.Member.Gender;
 import com.mealgram.member.dto.MemberUpdateRequest;
 import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
+import com.mealgram.member.dto.VerifyResetCodeRequest;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -153,6 +154,17 @@ class MemberInputValidationTest {
 
         assertEquals(Set.of("newPassword"), fields(new ResetPasswordRequest("token", "aaaaaaaaaa")));
         assertTrue(fields(new ResetPasswordRequest("token", "password12!")).isEmpty());
+
+    }
+
+    @Test
+    @DisplayName("인증번호 확인: 인증번호는 숫자 6자리여야 한다.")
+    void verifyResetCodeValidation() {
+
+        assertTrue(fields(new VerifyResetCodeRequest("a@example.com", "123456")).isEmpty());
+        assertEquals(Set.of("code"), fields(new VerifyResetCodeRequest("a@example.com", "12345")));
+        assertEquals(Set.of("code"), fields(new VerifyResetCodeRequest("a@example.com", "12345a")));
+        assertEquals(Set.of("email"), fields(new VerifyResetCodeRequest("not-email", "123456")));
 
     }
 
