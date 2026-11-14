@@ -16,6 +16,8 @@ import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
+import com.mealgram.member.dto.VerifyResetCodeRequest;
+import com.mealgram.member.dto.VerifyResetCodeResponse;
 
 import jakarta.validation.Valid;
 
@@ -71,6 +73,13 @@ public class AuthController {
         authService.forgotPassword(request);
 
         return ResponseEntity.ok().build();
+
+    }
+
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<VerifyResetCodeResponse> verifyResetCode(@Valid @RequestBody VerifyResetCodeRequest request) {
+
+        return ResponseEntity.ok(authService.verifyResetCode(request));
 
     }
 

@@ -35,6 +35,8 @@ import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.ResetPasswordRequest;
+import com.mealgram.member.dto.VerifyResetCodeRequest;
+import com.mealgram.member.dto.VerifyResetCodeResponse;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Encoders;
@@ -246,6 +248,68 @@ class AuthServiceTest {
 
         verify(passwordResetCodeStore, never()).save(anyLong(), anyString());
         verify(passwordResetMailer, never()).send(anyString(), anyString());
+
+    }
+
+    @Test
+    @DisplayName("맞는 인증번호면 재설정 토큰을 보관하고 돌려준다.")
+    void verifiesCode() {
+
+        Member member = Member.builder().id(1L).email("a@example.com").build();
+        when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
+        when(passwordResetCodeStore.consume(1L, "123456")).thenReturn(true);
+
+        VerifyResetCodeResponse response = authService.verifyResetCode(new VerifyResetCodeRequest("A@Example.com", "123456"));
+
+        assertEquals(43, response.resetToken().length());
+        verify(passwordResetTokenStore).save(1L, response.resetToken());
+        verify(passwordResetCodeStore).resetFailures("a@example.com");
+
+    }
+
+    @Test
+    @DisplayName("틀린 인증번호면 실패를 기록하고 토큰을 만들지 않는다.")
+    void rejectsWrongCode() {
+
+        Member member = Member.builder().id(1L).email("a@example.com").build();
+        when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
+        when(passwordResetCodeStore.consume(1L, "000000")).thenReturn(false);
+
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> authService.verifyResetCode(new VerifyResetCodeRequest("a@example.com", "000000")));
+
+        assertEquals(ErrorCode.INVALID_RESET_CODE, e.getErrorCode());
+        verify(passwordResetCodeStore).recordFailure("a@example.com");
+        verify(passwordResetTokenStore, never()).save(anyLong(), anyString());
+
+    }
+
+    @Test
+    @DisplayName("가입되지 않은 이메일도 틀린 인증번호와 같은 오류로 응답한다.")
+    void rejectsUnknownEmailLikeWrongCode() {
+
+        when(memberRepository.findByEmail("none@example.com")).thenReturn(Optional.empty());
+
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> authService.verifyResetCode(new VerifyResetCodeRequest("none@example.com", "123456")));
+
+        assertEquals(ErrorCode.INVALID_RESET_CODE, e.getErrorCode());
+        verify(passwordResetCodeStore).recordFailure("none@example.com");
+        verify(passwordResetCodeStore, never()).consume(anyLong(), anyString());
+
+    }
+
+    @Test
+    @DisplayName("틀린 횟수가 많으면 인증번호를 확인하지 않고 막는다.")
+    void blocksAfterRepeatedFailures() {
+
+        when(passwordResetCodeStore.isBlocked("a@example.com")).thenReturn(true);
+
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> authService.verifyResetCode(new VerifyResetCodeRequest("a@example.com", "123456")));
+
+        assertEquals(ErrorCode.RESET_CODE_BLOCKED, e.getErrorCode());
+        verify(memberRepository, never()).findByEmail(anyString());
 
     }
 

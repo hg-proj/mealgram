@@ -157,8 +157,8 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("비밀번호 재설정을 요청하면 가입한 이메일로 인증번호 6자리를 보낸다.")
-    void forgotPasswordSendsCode() throws Exception {
+    @DisplayName("비밀번호 재설정은 인증번호 확인 뒤 받은 토큰으로 새 비밀번호를 정하고 이전 로그인은 무효가 된다.")
+    void passwordReset() throws Exception {
 
         Member member = signupAndLogin("rst");
 
@@ -167,7 +167,41 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
         verify(passwordResetMailer).send(eq(member.email()), code.capture());
         assertTrue(code.getValue().matches("\\d{6}"));
 
-        assertEquals(200, status(postJson("/api/auth/login", Map.of("loginId", member.loginId(), "password", password()), null)));
+        assertEquals(400, status(postJson("/api/auth/verify-reset-code", Map.of("email", member.email(), "code", wrongCode(code.getValue())), null)));
+        JsonNode verified = body(postJson("/api/auth/verify-reset-code", Map.of("email", member.email().toUpperCase(), "code", code.getValue()), null));
+        String resetToken = verified.get("resetToken").asString();
+        assertEquals(400, status(postJson("/api/auth/verify-reset-code", Map.of("email", member.email(), "code", code.getValue()), null)));
+
+        assertEquals(400, status(postJson("/api/auth/reset-password", Map.of("token", resetToken, "newPassword", "short"), null)));
+        assertEquals(200, status(postJson("/api/auth/reset-password", Map.of("token", resetToken, "newPassword", "New-pass-98!"), null)));
+        assertEquals(400, status(postJson("/api/auth/reset-password", Map.of("token", resetToken, "newPassword", "Other-pass-1!"), null)));
+
+        assertEquals(401, status(postJson("/api/auth/login", Map.of("loginId", member.loginId(), "password", password()), null)));
+        assertEquals(200, status(postJson("/api/auth/login", Map.of("loginId", member.loginId(), "password", "New-pass-98!"), null)));
+        assertEquals(401, status(postJson("/api/auth/refresh", Map.of("refreshToken", member.refreshToken()), null)));
+
+    }
+
+    private String wrongCode(String code) {
+
+        return code.equals("000000") ? "000001" : "000000";
+
+    }
+
+    @Test
+    @DisplayName("인증번호를 5번 틀리면 맞는 인증번호도 429로 막는다.")
+    void verifyResetCodeIsBlockedAfterRepeatedFailures() throws Exception {
+
+        Member member = signupAndLogin("rcb");
+        assertEquals(200, status(postJson("/api/auth/forgot-password", Map.of("email", member.email()), null)));
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(passwordResetMailer).send(eq(member.email()), code.capture());
+
+        for (int i = 0; i < 5; i++) {
+            assertEquals(400, status(postJson("/api/auth/verify-reset-code", Map.of("email", member.email(), "code", wrongCode(code.getValue())), null)));
+        }
+
+        assertEquals(429, status(postJson("/api/auth/verify-reset-code", Map.of("email", member.email(), "code", code.getValue()), null)));
 
     }
 

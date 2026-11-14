@@ -1,6 +1,7 @@
 package com.mealgram.member;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Locale;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,8 @@ import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.ResetPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
+import com.mealgram.member.dto.VerifyResetCodeRequest;
+import com.mealgram.member.dto.VerifyResetCodeResponse;
 
 // 회원가입, 로그인, 토큰 재발급, 로그아웃, 비밀번호 재설정 처리 서비스
 
@@ -42,6 +45,7 @@ public class AuthService {
     private static final String DUMMY_PASSWORD = "mealgram-dummy-password";
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int RESET_CODE_BOUND = 1_000_000;
+    private static final int RESET_TOKEN_BYTES = 32;
 
     public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider, RefreshTokenStore refreshTokenStore,
@@ -147,6 +151,29 @@ public class AuthService {
         });
     }
 
+    public VerifyResetCodeResponse verifyResetCode(VerifyResetCodeRequest request) {
+
+        String email = normalizeEmail(request.email());
+
+        if (passwordResetCodeStore.isBlocked(email)) {
+            throw new BusinessException(ErrorCode.RESET_CODE_BLOCKED);
+        }
+
+        Member member = memberRepository.findByEmail(email).orElse(null);
+
+        if (member == null || !passwordResetCodeStore.consume(member.getId(), request.code())) {
+            passwordResetCodeStore.recordFailure(email);
+            throw new BusinessException(ErrorCode.INVALID_RESET_CODE);
+        }
+
+        passwordResetCodeStore.resetFailures(email);
+
+        String token = generateResetToken();
+        passwordResetTokenStore.save(member.getId(), token);
+
+        return new VerifyResetCodeResponse(token);
+    }
+
     public void resetPassword(ResetPasswordRequest request) {
 
         Long memberId = passwordResetTokenStore.consume(request.token())
@@ -169,6 +196,14 @@ public class AuthService {
 
         return String.format("%06d", RANDOM.nextInt(RESET_CODE_BOUND));
 
+    }
+
+    private String generateResetToken() {
+
+        byte[] bytes = new byte[RESET_TOKEN_BYTES];
+        RANDOM.nextBytes(bytes);
+
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     private Long findStoredMemberId(String refreshToken) {
