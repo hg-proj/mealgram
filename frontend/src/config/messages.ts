@@ -4,6 +4,14 @@ export const messages = {
   network: '서버에 연결하지 못했습니다. 네트워크 상태를 확인해 주세요.',
   loginFailed: '로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   signupFailed: '가입하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  resetSendFailed: '인증번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  resetVerifyFailed: '인증번호를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  resetFailed: '비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  notice: {
+    resetCodeSent: '인증번호가 전송되었습니다. 10분 안에 입력해 주세요.',
+    resetCodeVerified: '인증이 완료되었습니다.',
+    resetCodeExpired: '인증번호가 만료되었습니다. 다시 보내 주세요.',
+  },
   validation: {
     loginIdRequired: '아이디를 입력해 주세요.',
     passwordRequired: '비밀번호를 입력해 주세요.',
@@ -18,6 +26,8 @@ export const messages = {
     passwordMismatch: '비밀번호가 일치하지 않습니다.',
     emailRequired: '이메일을 입력해 주세요.',
     email: '이메일 형식이 올바르지 않습니다.',
+    resetCodeRequired: '인증번호를 입력해 주세요.',
+    resetCode: '인증번호 6자리를 입력해 주세요.',
     agreeTerms: '이용약관에 동의해 주세요.',
     agreePrivacy: '개인정보 수집 및 이용에 동의해 주세요.',
     birthIncomplete: '생년월일을 모두 선택해 주세요.',
