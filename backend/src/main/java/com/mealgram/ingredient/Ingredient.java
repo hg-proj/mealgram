@@ -1,6 +1,7 @@
 package com.mealgram.ingredient;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,6 +31,18 @@ import lombok.NoArgsConstructor;
 public class Ingredient {
 
     public static final String SEASONING_CATEGORY = "양념";
+    public static final String TOOL_CATEGORY = "도구";
+    public static final List<String> UNSELECTABLE_CATEGORIES = List.of(SEASONING_CATEGORY, TOOL_CATEGORY);
+    public static final int MIN_DISH_COUNT = 3;
+    private static final List<String> CATEGORY_ORDER = List.of("채소", "육류", "해산물", "유제품/달걀", "곡류", "두부/콩", "과일", "견과류", "가루류", "해조류", "음료", "기타");
+
+    public static int categoryRank(String category) {
+
+        int rank = CATEGORY_ORDER.indexOf(category);
+
+        return rank < 0 ? CATEGORY_ORDER.size() : rank;
+
+    }
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)

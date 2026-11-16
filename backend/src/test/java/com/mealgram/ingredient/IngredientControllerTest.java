@@ -100,4 +100,16 @@ class IngredientControllerTest {
 
     }
 
+    @Test
+    @DisplayName("검색어가 너무 길면 400 공통 오류 형식으로 응답한다.")
+    void rejectsTooLongKeyword() throws Exception {
+
+        mockMvc.perform(get("/ingredients").param("keyword", "가".repeat(51)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("INVALID_REQUEST"));
+
+        verify(ingredientService, never()).search(anyString(), any());
+
+    }
+
 }

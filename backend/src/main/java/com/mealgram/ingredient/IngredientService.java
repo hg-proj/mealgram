@@ -1,14 +1,19 @@
 package com.mealgram.ingredient;
 
+import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mealgram.common.exception.BusinessException;
 import com.mealgram.common.exception.ErrorCode;
+import com.mealgram.ingredient.dto.IngredientCatalogResponse;
 import com.mealgram.ingredient.dto.IngredientSearchResponse;
 import com.mealgram.ingredient.dto.MyIngredientCreateResponse;
 import com.mealgram.ingredient.dto.MyIngredientRequest;
@@ -21,11 +26,14 @@ import com.mealgram.member.MemberRepository;
 @Service
 public class IngredientService {
 
-    private static final long MIN_RECIPE_COUNT = 2;
+    private static final Duration CATALOG_TTL = Duration.ofMinutes(10);
 
     private final IngredientRepository ingredientRepository;
     private final MemberIngredientRepository memberIngredientRepository;
     private final MemberRepository memberRepository;
+
+    private volatile List<IngredientCatalogResponse> catalogCache;
+    private volatile long catalogLoadedAt;
 
     public IngredientService(IngredientRepository ingredientRepository,
                              MemberIngredientRepository memberIngredientRepository,
@@ -38,9 +46,50 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public List<IngredientSearchResponse> search(String keyword, Pageable pageable) {
 
-        return ingredientRepository.searchSelectable(keyword, Ingredient.SEASONING_CATEGORY, MIN_RECIPE_COUNT, pageable)
+        return ingredientRepository.searchSelectable(escapeLike(keyword), Ingredient.UNSELECTABLE_CATEGORIES, Ingredient.MIN_DISH_COUNT, pageable)
                 .map(IngredientSearchResponse::from)
                 .getContent();
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<IngredientCatalogResponse> getCatalog() {
+
+        List<IngredientCatalogResponse> cached = catalogCache;
+
+        if (cached != null && System.nanoTime() - catalogLoadedAt < CATALOG_TTL.toNanos()) {
+            return cached;
+        }
+
+        synchronized (this) {
+            if (catalogCache == null || System.nanoTime() - catalogLoadedAt >= CATALOG_TTL.toNanos()) {
+                catalogCache = loadCatalog();
+                catalogLoadedAt = System.nanoTime();
+            }
+
+            return catalogCache;
+        }
+
+    }
+
+    private List<IngredientCatalogResponse> loadCatalog() {
+
+        return ingredientRepository
+                .searchSelectable("", Ingredient.UNSELECTABLE_CATEGORIES, Ingredient.MIN_DISH_COUNT,
+                        Pageable.unpaged(Sort.by("name")))
+                .stream()
+                .collect(Collectors.groupingBy(Ingredient::getCategory,
+                        Collectors.mapping(IngredientSearchResponse::from, Collectors.toList())))
+                .entrySet().stream()
+                .map(entry -> new IngredientCatalogResponse(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparingInt(catalog -> Ingredient.categoryRank(catalog.category())))
+                .toList();
+
+    }
+
+    private static String escapeLike(String keyword) {
+
+        return keyword.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
 
     }
 
