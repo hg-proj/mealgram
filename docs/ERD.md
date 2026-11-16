@@ -193,7 +193,7 @@ UNIQUE(member_id, recipe_id): 같은 회원이 같은 레시피를 두 번 저�
 | --- | --- | --- |
 | id | BIGINT | PK |
 | name (재료명) | VARCHAR(50) | NOT NULL, UNIQUE |
-| category (카테고리) | VARCHAR(20) | NOT NULL |
+| category (카테고리) | VARCHAR(20) | NOT NULL, 양념과 도구는 재료 선택 화면에 보이지 않음 |
 | created_at (등록일시) | TIMESTAMP | NOT NULL |
 
 ### recipe_ingredient (레시피 재료)

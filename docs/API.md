@@ -62,7 +62,8 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /api/ingredients | 전체 재료 검색(자동완성), 로그인 없이 가능 | keyword<br>page, size | 쿼리 | 200<br>id<br>name |
+| GET | /api/ingredients | 전체 재료 검색(자동완성), 후식을 뺀 요리의 재료 목록에 3번 이상 쓰인 재료만, 로그인 없이 가능 | keyword 50자 이하, 넘으면 400<br>page, size | 쿼리 | 200<br>id<br>name |
+| GET | /api/ingredients/catalog | 선택할 수 있는 재료를 분류별로 조회, 후식을 뺀 요리의 재료 목록에 3번 이상 쓰인 재료만, 로그인 없이 가능 | - | - | 200<br>category 분류 이름<br>ingredients[] id, name |
 | GET | /api/members/me/ingredients | 내 재료 목록 | page, size | 쿼리 | 200<br>id (내 재료 번호, 삭제할 때 사용)<br>ingredientId (재료 id, 식단 추천 요청에 사용)<br>name |
 | POST | /api/members/me/ingredients | 내 재료 등록 | ingredientId* | body | 201<br>id |
 | DELETE | /api/members/me/ingredients/{id} | 내 재료 삭제 | - | 경로변수 | 204 (다른 회원 소유 id면 404) |

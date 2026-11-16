@@ -17,7 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mealgram.common.exception.BusinessException;
+import com.mealgram.common.exception.ErrorCode;
 import com.mealgram.common.validation.SortValidator;
+import com.mealgram.ingredient.dto.IngredientCatalogResponse;
 import com.mealgram.ingredient.dto.IngredientSearchResponse;
 import com.mealgram.ingredient.dto.MyIngredientCreateResponse;
 import com.mealgram.ingredient.dto.MyIngredientRequest;
@@ -30,6 +33,7 @@ import jakarta.validation.Valid;
 @RestController
 public class IngredientController {
 
+    private static final int MAX_KEYWORD_LENGTH = 50;
     private static final Set<String> SEARCH_SORT_PROPERTIES = Set.of("id", "name");
     private static final Set<String> MY_SORT_PROPERTIES = Set.of("id", "createdAt");
 
@@ -45,8 +49,18 @@ public class IngredientController {
             @PageableDefault(sort = "name") Pageable pageable) {
 
         SortValidator.require(pageable, SEARCH_SORT_PROPERTIES);
+        if (keyword.length() > MAX_KEYWORD_LENGTH) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
 
         return ResponseEntity.ok(ingredientService.search(keyword, pageable));
+
+    }
+
+    @GetMapping("/ingredients/catalog")
+    public ResponseEntity<List<IngredientCatalogResponse>> getCatalog() {
+
+        return ResponseEntity.ok(ingredientService.getCatalog());
 
     }
 
