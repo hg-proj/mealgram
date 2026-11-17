@@ -1,15 +1,19 @@
 package com.mealgram.savedmeal.dto;
 
-import com.mealgram.savedmeal.SavedMeal;
+import java.time.LocalDateTime;
+import java.util.List;
 
-// 내 식단 목록 응답 데이터
+import com.mealgram.meal.dto.MealContext;
+import com.mealgram.meal.dto.MealDish;
+import com.mealgram.meal.nutrition.NutritionSummary;
 
-public record SavedMealResponse(Long id, Long recipeId, String name) {
+// 내 식단 응답 데이터
 
-    public static SavedMealResponse from(SavedMeal savedMeal) {
-
-        return new SavedMealResponse(savedMeal.getId(), savedMeal.getRecipe().getId(), savedMeal.getRecipe().getName());
-
-    }
+public record SavedMealResponse(Long id,
+                                String style,
+                                List<MealDish> dishes,
+                                NutritionSummary nutrition,
+                                MealContext context,
+                                LocalDateTime createdAt) {
 
 }

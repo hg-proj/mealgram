@@ -8,14 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.mealgram.common.embedding.EmbeddingClient;
 import com.mealgram.common.exception.ExternalApiException;
 import com.mealgram.common.llm.LlmClient;
 import com.sun.net.httpserver.HttpServer;
@@ -61,12 +59,6 @@ class ExternalClientTest {
     private LlmClient llm() {
 
         return new LlmClient(API_KEY, "test-model", url());
-
-    }
-
-    private EmbeddingClient embedding() {
-
-        return new EmbeddingClient(API_KEY, "test-model", url());
 
     }
 
@@ -142,44 +134,6 @@ class ExternalClientTest {
     void blankKeyIsConfigurationError() {
 
         assertThrows(IllegalStateException.class, () -> new LlmClient("", "test-model", url()).chat("시스템", "사용자"));
-        assertThrows(IllegalStateException.class, () -> new EmbeddingClient("", "test-model", url()).embed(List.of("a")));
-
-    }
-
-    @Test
-    @DisplayName("임베딩 응답을 index 순서대로 돌려준다.")
-    void embeddingReturnsVectorsInOrder() {
-
-        status = 200;
-        body = "{\"data\":[{\"index\":1,\"embedding\":[0.3,0.4]},{\"index\":0,\"embedding\":[0.1,0.2]}]}";
-
-        List<float[]> vectors = embedding().embed(List.of("a", "b"));
-
-        assertEquals(2, vectors.size());
-        assertEquals(0.1f, vectors.get(0)[0]);
-        assertEquals(0.3f, vectors.get(1)[0]);
-
-    }
-
-    @Test
-    @DisplayName("임베딩이 오류 상태를 주거나 개수가 다르면 외부 호출 실패로 알린다.")
-    void embeddingFailures() {
-
-        status = 429;
-        body = "{\"error\":{\"message\":\"rate limit\"}}";
-
-        ExternalApiException limited = assertThrows(ExternalApiException.class, () -> embedding().embed(List.of("a")));
-        assertTrue(limited.getMessage().contains("429"));
-        assertEquals("임베딩", limited.getService());
-
-        status = 200;
-        body = "{\"data\":[{\"index\":0,\"embedding\":[0.1]}]}";
-
-        assertThrows(ExternalApiException.class, () -> embedding().embed(List.of("a", "b")));
-
-        body = "{}";
-
-        assertThrows(ExternalApiException.class, () -> embedding().embed(List.of("a")));
 
     }
 
