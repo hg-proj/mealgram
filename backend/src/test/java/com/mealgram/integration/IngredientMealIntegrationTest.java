@@ -3,26 +3,20 @@ package com.mealgram.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MvcResult;
 
 import tools.jackson.databind.JsonNode;
@@ -30,51 +24,15 @@ import tools.jackson.databind.JsonNode;
 @EnabledIf("com.mealgram.integration.IntegrationTestSupport#dockerAvailable")
 class IngredientMealIntegrationTest extends IntegrationTestSupport {
 
-    private static final Pattern RECIPE_LINE = Pattern.compile("id=(\\d+) \\| [^|]+ \\| ([^|]+) \\|");
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private static final String MEAL_PLAN = """
+            {"meals":[{"index":0,"style":"스타일0"},
+                      {"index":1,"style":"스타일1"},
+                      {"index":2,"style":"스타일2"}]}""";
 
     @BeforeEach
     void stubExternalCalls() {
 
-        float[] vector = new float[1536];
-        for (int i = 0; i < vector.length; i++) {
-            vector[i] = 0.01f + (i % 7) * 0.001f;
-        }
-        when(embeddingClient.embed(anyList())).thenAnswer(invocation -> List.of(vector));
-        when(llmClient.chat(anyString(), anyString())).thenAnswer(invocation -> mealPlanFor(invocation.getArgument(1)));
-
-    }
-
-    private String mealPlanFor(String prompt) {
-
-        Map<String, List<Long>> byCategory = new LinkedHashMap<>();
-        Matcher matcher = RECIPE_LINE.matcher(prompt);
-        while (matcher.find()) {
-            byCategory.computeIfAbsent(matcher.group(2).trim(), key -> new ArrayList<>()).add(Long.parseLong(matcher.group(1)));
-        }
-        List<String> meals = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            List<Long> ids = new ArrayList<>();
-            addAt(ids, byCategory.get("밥"), i, 1);
-            addAt(ids, byCategory.get("국&찌개"), i, 1);
-            addAt(ids, byCategory.get("반찬"), i * 3, 3);
-            meals.add("{\"style\":\"스타일" + i + "\",\"reason\":\"테스트 설명\",\"recipeIds\":" + ids + "}");
-        }
-
-        return "{\"meals\":[" + String.join(",", meals) + "]}";
-
-    }
-
-    private void addAt(List<Long> ids, List<Long> source, int from, int count) {
-
-        if (source == null) {
-            return;
-        }
-        for (int i = 0; i < count && from + i < source.size(); i++) {
-            ids.add(source.get(from + i));
-        }
+        when(llmClient.chat(anyString(), anyString())).thenReturn(MEAL_PLAN);
 
     }
 
@@ -161,27 +119,32 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("저장식단은 저장, 중복 방지, 최신순 목록, 삭제가 되고 다른 회원의 것은 건드릴 수 없다.")
+    @DisplayName("저장식단은 추천받은 식단 한 상을 저장, 중복 방지, 최신순 목록, 삭제가 되고 다른 회원의 것은 건드릴 수 없다.")
     void savedMeals() throws Exception {
 
         Member owner = signupAndLogin("sv");
         Member other = signupAndLogin("so");
-        List<Long> recipeIds = jdbcTemplate.queryForList("select id from recipe order by id limit 2", Long.class);
+        String mealId = body(postJson("/api/meals", Map.of("goal", "유지"), owner.accessToken())).get("id").asString();
 
-        MvcResult first = postJson("/api/saved-meals", Map.of("recipeId", recipeIds.get(0)), owner.accessToken());
-        MvcResult second = postJson("/api/saved-meals", Map.of("recipeId", recipeIds.get(1)), owner.accessToken());
+        MvcResult first = postJson("/api/saved-meals", Map.of("mealId", mealId, "candidateIndex", 0), owner.accessToken());
+        MvcResult second = postJson("/api/saved-meals", Map.of("mealId", mealId, "candidateIndex", 1), owner.accessToken());
         assertEquals(201, status(first));
         assertEquals(201, status(second));
-        assertEquals(409, status(postJson("/api/saved-meals", Map.of("recipeId", recipeIds.get(0)), owner.accessToken())));
-        assertEquals(404, status(postJson("/api/saved-meals", Map.of("recipeId", 999999999L), owner.accessToken())));
+        assertEquals(409, status(postJson("/api/saved-meals", Map.of("mealId", mealId, "candidateIndex", 0), owner.accessToken())));
+        assertEquals(404, status(postJson("/api/saved-meals", Map.of("mealId", mealId, "candidateIndex", 0), other.accessToken())));
+        assertEquals(404, status(postJson("/api/saved-meals",
+                Map.of("mealId", "00000000-0000-0000-0000-000000000000", "candidateIndex", 0), owner.accessToken())));
+        assertEquals(400, status(postJson("/api/saved-meals", Map.of("mealId", mealId, "candidateIndex", 3), owner.accessToken())));
         assertEquals(400, status(postJson("/api/saved-meals", Map.of(), owner.accessToken())));
 
         JsonNode list = body(getJson("/api/saved-meals", owner.accessToken()));
         assertEquals(2, list.size());
-        assertEquals(recipeIds.get(1), list.get(0).get("recipeId").asLong());
-        assertFalse(list.get(0).get("name").asString().isBlank());
+        assertEquals(body(second).get("id").asLong(), list.get(0).get("id").asLong());
+        assertFalse(list.get(0).get("style").asString().isBlank());
+        assertTrue(list.get(0).get("dishes").size() >= 1);
+        assertTrue(list.get(0).get("nutrition").get("targetCalorie").asInt() > 0);
         assertEquals(0, body(getJson("/api/saved-meals", other.accessToken())).size());
-        assertEquals(400, status(getJson("/api/saved-meals?sort=recipe.name", owner.accessToken())));
+        assertEquals(400, status(getJson("/api/saved-meals?sort=dishesJson", owner.accessToken())));
 
         long firstId = body(first).get("id").asLong();
         assertEquals(404, status(deleteJson("/api/saved-meals/" + firstId, other.accessToken())));
@@ -191,48 +154,9 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("레시피 상세는 내가 가진 재료를 부족 재료에서 빼고 양념은 따로 보여 준다.")
-    void recipeDetail() throws Exception {
-
-        Member member = signupAndLogin("rcp");
-        Long recipeId = jdbcTemplate.queryForObject("""
-                select r.id from recipe r
-                join recipe_ingredient ri on ri.recipe_id = r.id
-                join ingredient i on i.id = ri.ingredient_id
-                group by r.id
-                having count(*) filter (where i.category <> '양념') >= 3 and count(*) filter (where i.category = '양념') >= 1
-                order by r.id limit 1
-                """, Long.class);
-        Long ownedIngredient = jdbcTemplate.queryForObject("""
-                select i.id from recipe_ingredient ri join ingredient i on i.id = ri.ingredient_id
-                where ri.recipe_id = ? and i.category <> '양념' order by i.id limit 1
-                """, Long.class, recipeId);
-        String ownedName = jdbcTemplate.queryForObject("select name from ingredient where id = ?", String.class, ownedIngredient);
-
-        JsonNode before = body(getJson("/api/recipes/" + recipeId, member.accessToken()));
-        assertTrue(before.toString().contains("\"" + ownedName + "\""));
-        assertTrue(before.get("seasonings").size() >= 1);
-
-        assertEquals(201, status(postJson("/api/members/me/ingredients", Map.of("ingredientId", ownedIngredient), member.accessToken())));
-        JsonNode after = body(getJson("/api/recipes/" + recipeId, member.accessToken()));
-        List<String> missing = new ArrayList<>();
-        after.get("missingIngredients").forEach(item -> missing.add(item.asString()));
-
-        assertFalse(missing.contains(ownedName));
-        assertEquals(before.get("missingIngredients").size() - 1, missing.size());
-        assertEquals(before.get("seasonings"), after.get("seasonings"));
-        assertEquals(404, status(getJson("/api/recipes/999999999", member.accessToken())));
-
-    }
-
-    @Test
-    @DisplayName("식단 추천은 벡터 검색과 영양 검증을 거쳐 3개를 주고 만든 회원만 다시 볼 수 있다.")
+    @DisplayName("식단 추천은 요리를 조합해 3개를 주고 만든 회원만 다시 볼 수 있다.")
     void mealRecommendation() throws Exception {
 
-        jdbcTemplate.update("""
-                update recipe set embedding = (select array_agg((0.01 + (g % 7) * 0.001)::float4)::vector from generate_series(1, 1536) g)
-                where id % 3 = 0
-                """);
         Member member = signupAndLogin("meal");
         Member other = signupAndLogin("mealo");
 
@@ -242,7 +166,7 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
         assertFalse(meals.get("relaxed").asBoolean());
         assertEquals(3, meals.get("candidates").size());
         for (JsonNode candidate : meals.get("candidates")) {
-            assertTrue(candidate.get("recipes").size() >= 3);
+            assertTrue(candidate.get("dishes").size() >= 1);
             JsonNode nutrition = candidate.get("nutrition");
             assertTrue(nutrition.get("targetCalorie").asInt() > 0);
             assertTrue(nutrition.has("verified"));
@@ -288,6 +212,21 @@ class IngredientMealIntegrationTest extends IntegrationTestSupport {
 
         assertEquals(404, status(result));
         assertEquals("MEMBER_NOT_FOUND", body(result).get("error").get("code").asString());
+
+    }
+
+    @Test
+    @DisplayName("선택할 수 있는 재료는 요리의 재료 목록에 있는 재료만이고 양념은 나오지 않는다.")
+    void catalogHasOnlyDishIngredients() throws Exception {
+
+        JsonNode catalog = body(getJson("/api/ingredients/catalog", null));
+        List<String> names = new ArrayList<>();
+        catalog.forEach(category -> category.get("ingredients").forEach(item -> names.add(item.get("name").asString())));
+
+        assertTrue(names.contains("양파"));
+        assertTrue(names.contains("돼지고기"));
+        assertFalse(names.contains("소금"));
+        assertFalse(names.contains("간장"));
 
     }
 

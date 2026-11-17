@@ -26,23 +26,23 @@ class MealSampleIntegrationTest extends IntegrationTestSupport {
         assertEquals("유지", samples.get(1).get("goal").asString());
         assertEquals("벌크업", samples.get(2).get("goal").asString());
         for (JsonNode sample : samples) {
-            assertTrue(sample.get("recipes").size() >= 4);
+            assertTrue(sample.get("dishes").size() >= 1);
         }
 
     }
 
     @Test
-    @DisplayName("랜덤 식단의 메인 요리에는 사진 경로가 있다.")
-    void mainDishHasImage() throws Exception {
+    @DisplayName("랜덤 식단의 요리에는 분량과 열량이 있고 사진 경로는 요리 사진 폴더를 가리킨다.")
+    void dishesHaveAmountAndCalorie() throws Exception {
 
         JsonNode samples = body(getJson("/api/meals/samples", null));
 
         for (JsonNode sample : samples) {
-            boolean hasImage = false;
-            for (JsonNode recipe : sample.get("recipes")) {
-                hasImage = hasImage || recipe.get("imageUrl").asString("").startsWith("/images/recipes/");
+            for (JsonNode dish : sample.get("dishes")) {
+                assertTrue(dish.get("grams").asInt() > 0);
+                assertTrue(dish.get("calorie").asInt() > 0);
+                assertTrue(dish.get("imageUrl").isNull() || dish.get("imageUrl").asString().startsWith("/images/dishes/"));
             }
-            assertTrue(hasImage);
         }
 
     }

@@ -12,7 +12,12 @@ import com.mealgram.member.Member.Gender;
 public record BodyInfo(LocalDate birthDate, Gender gender, BigDecimal height, BigDecimal weight,
                        ActivityLevel activityLevel) {
 
-    // 만 나이, 생년월일이 없으면 null
+    public boolean hasAny() {
+
+        return birthDate != null || gender != null || height != null || weight != null || activityLevel != null;
+
+    }
+
     public Integer ageOn(LocalDate today) {
 
         return birthDate == null ? null : Period.between(birthDate, today).getYears();

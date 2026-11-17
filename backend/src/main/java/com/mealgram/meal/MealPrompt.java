@@ -4,40 +4,39 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.mealgram.recipe.dto.RecipeCandidate;
+import com.mealgram.meal.nutrition.NutritionSummary;
 
-// 식단 생성 프롬프트 구성
+// 식단 후보 선택 프롬프트 생성
 
 public final class MealPrompt {
 
     public static final int MEAL_COUNT = 3;
 
     private static final String SYSTEM = """
-            당신은 영양사입니다. 사용자가 준 후보 레시피 중에서만 골라 식단안을 만듭니다.
+            당신은 영양 규칙으로 미리 구성한 식단 후보 중에서 가장 자연스러운 식단을 고르고 이름을 붙이는 도우미입니다.
             규칙:
-            - 반드시 후보 목록에 있는 id만 사용합니다.
-            - 식단안 하나는 밥 1개, 국 또는 찌개 1개, 반찬 3개(메인 반찬 1개 포함, 김치도 반찬으로 사용 가능)를 목표로 구성합니다.
-            - 식단안은 서로 다른 스타일로 %d개를 만듭니다. 예: 담백한 한식, 매콤한 맛, 저칼로리.
-            - 같은 레시피를 한 식단안에 두 번 넣지 않습니다.
-            - 영양 정보 없음으로 표시된 레시피는 영양 검증을 못 하므로, 영양 정보가 있는 레시피를 우선 사용합니다.
-            - 후보에 조건충족 표시가 있으면 표시된 레시피를 우선 사용하고, 부족할 때만 나머지를 사용합니다.
+            - 반드시 후보 목록에 있는 번호만 사용합니다.
+            - 서로 다른 식단 %d개를 고릅니다. 메인 반찬과 주재료와 조리법이 서로 다르게 고릅니다.
+            - 요리의 어울림을 봅니다. 맛이 겹치거나 무거운 조합, 어색한 조합은 피합니다.
+            - style은 12자 이내의 식단 이름(예: 담백한 한식 한 상)으로 씁니다.
+            - 기준 미달로 표시된 후보는 영양 비율이 식단 성향에서 벗어난 것이므로, 표시가 없는 후보를 우선 고릅니다.
+            - 영양 수치는 바꾸지 않고 후보에 적힌 값만 참고합니다.
             - 응답은 JSON 객체 하나만 출력합니다.
-            응답 형식: {"meals":[{"style":"스타일 이름","reason":"한 줄 설명","recipeIds":[1,2,3]}]}
+            응답 형식: {"meals":[{"index":0,"style":"식단 이름"}]}
             """;
 
     private static final String USER = """
             목표: %s
+            식단 성향: %s
             장르: %s
-            한 끼 목표 열량: %dkcal (식단안 열량 합이 이 값에 가깝게 구성)
-            후보 레시피:
+            한 끼 목표 열량: %dkcal
+            후보 식단:
             %s
             """;
 
-    private static final String RECIPE_LINE =
-            "id=%d | %s | %s | %s | 재료: %s";
-    private static final String NUTRITION = "%skcal 탄수화물 %sg 단백질 %sg 지방 %sg";
-    private static final String NO_NUTRITION = "영양 정보 없음";
-    private static final String MATCHED_MARK = " | 조건충족";
+    private static final String MEAL_LINE = "번호=%d | %s | %skcal 탄수화물 %s%% 단백질 %s%% 지방 %s%%";
+    private static final String DISH_FORMAT = "%s %dg";
+    private static final String BELOW_STANDARD_MARK = " | 기준 미달";
     private static final String NOT_SELECTED = "선택 안 함";
 
     private MealPrompt() {
@@ -50,27 +49,20 @@ public final class MealPrompt {
 
     }
 
-    public static String user(List<RecipeCandidate> candidates, String goal, String genre, int targetCalorie) {
+    public static String user(List<ComposedMeal> meals, String goal, DietStyle style, String genre, int targetCalorie) {
 
-        boolean mixed = candidates.stream().anyMatch(candidate -> !candidate.matched());
-        String recipes = candidates.stream()
-                .map(candidate -> RECIPE_LINE.formatted(candidate.id(), candidate.name(), candidate.category(),
-                        nutrition(candidate),
-                        String.join(", ", candidate.ingredients())) + (mixed && candidate.matched() ? MATCHED_MARK : ""))
-                .collect(Collectors.joining("\n"));
-
-        return USER.formatted(valueOrDefault(goal), valueOrDefault(genre), targetCalorie, recipes);
-
-    }
-
-    private static String nutrition(RecipeCandidate candidate) {
-
-        if (candidate.calorie() == null) {
-            return NO_NUTRITION;
+        StringBuilder lines = new StringBuilder();
+        for (int i = 0; i < meals.size(); i++) {
+            ComposedMeal meal = meals.get(i);
+            NutritionSummary nutrition = MealNutrition.summarize(meal, targetCalorie, style);
+            String dishes = meal.dishes().stream()
+                    .map(composed -> DISH_FORMAT.formatted(composed.dish().getName(), composed.grams()))
+                    .collect(Collectors.joining(", "));
+            lines.append(MEAL_LINE.formatted(i, dishes, plain(nutrition.calorie()), plain(nutrition.carbohydrateRatio()),
+                    plain(nutrition.proteinRatio()), plain(nutrition.fatRatio()))).append('\n');
         }
 
-        return NUTRITION.formatted(plain(candidate.calorie()), plain(candidate.carbohydrate()),
-                plain(candidate.protein()), plain(candidate.fat()));
+        return USER.formatted(valueOrDefault(goal), style.getLabel(), valueOrDefault(genre), targetCalorie, lines);
 
     }
 

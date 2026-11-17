@@ -25,7 +25,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import com.mealgram.common.embedding.EmbeddingClient;
 import com.mealgram.common.llm.LlmClient;
 import com.mealgram.common.mail.PasswordResetMailer;
 
@@ -35,8 +34,8 @@ import tools.jackson.databind.json.JsonMapper;
 // 통합 테스트 공통 설정
 
 @SpringBootTest(properties = {
-        "recipe.import.enabled=true",
-        "recipe.embedding.enabled=false",
+        "ingredient.import.enabled=true",
+        "dish.import.enabled=true",
         "rate-limit.meals.max-requests=3",
         "rate-limit.meals.guest-max-requests=2",
         "rate-limit.meals.window-seconds=60",
@@ -67,9 +66,6 @@ public abstract class IntegrationTestSupport {
 
     @Autowired
     protected MockMvc mockMvc;
-
-    @MockitoBean
-    protected EmbeddingClient embeddingClient;
 
     @MockitoBean
     protected LlmClient llmClient;
