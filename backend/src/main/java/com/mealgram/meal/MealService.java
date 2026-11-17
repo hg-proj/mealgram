@@ -45,8 +45,7 @@ public class MealService {
     private static final String KEY_PREFIX = "meal:";
     private static final Duration RESULT_TTL = Duration.ofHours(24);
     private static final int CANDIDATE_COUNT = 9;
-    private static final List<String> STYLE_PREFIXES = List.of("담백한", "든든한", "균형 잡힌");
-    private static final String DEFAULT_CUISINE = "한식";
+    private static final List<String> DEFAULT_STYLES = List.of("담백한 한식 한 상", "든든한 한식 한 상", "균형 잡힌 한식 한 상");
     private static final String RANDOM_GOAL = "랜덤";
     private static final List<String> GOALS = List.of("다이어트", "유지", "벌크업");
     private static final int RANDOM_CANDIDATE_COUNT = 3;
@@ -166,7 +165,7 @@ public class MealService {
                     .orElse(composed.get(0));
             usedPhotos.addAll(first.photoGroups());
             relaxed = relaxed || !first.requiredMet();
-            meals.add(toMealCandidate(first, defaultStyle(first, i, genres(genre)), dietStyle, targetCalorie,
+            meals.add(toMealCandidate(first, DEFAULT_STYLES.get(i), dietStyle, targetCalorie,
                     goal, genres(genre)));
         }
 
@@ -257,7 +256,7 @@ public class MealService {
                     && meal.index() < composed.size() && !picked.contains(meal.index())
                     && used.accept(composed.get(meal.index()), Pick.FAMILY_AND_PHOTO)) {
                 picked.add(meal.index());
-                meals.add(toMealCandidate(composed.get(meal.index()), text(meal.style(), defaultStyle(composed.get(meal.index()), meals.size(), chosenGenres)),
+                meals.add(toMealCandidate(composed.get(meal.index()), text(meal.style(), DEFAULT_STYLES.get(meals.size())),
                         style, targetCalorie, goal, chosenGenres));
             }
         }
@@ -282,7 +281,7 @@ public class MealService {
         for (int i = 0; i < composed.size() && meals.size() < MealPrompt.MEAL_COUNT; i++) {
             if (!picked.contains(i) && used.accept(composed.get(i), pick)) {
                 picked.add(i);
-                meals.add(toMealCandidate(composed.get(i), defaultStyle(composed.get(i), meals.size(), chosenGenres), style,
+                meals.add(toMealCandidate(composed.get(i), DEFAULT_STYLES.get(meals.size()), style,
                         targetCalorie, goal, chosenGenres));
             }
         }
@@ -370,34 +369,6 @@ public class MealService {
         }
 
         return found.stream().map(Ingredient::getName).toList();
-
-    }
-
-    private static String defaultStyle(ComposedMeal meal, int order, List<String> chosenGenres) {
-
-        Dish main = meal.dishes().stream()
-                .map(ComposedDish::dish)
-                .filter(dish -> dish.getRole() == DishRole.MAIN || dish.getRole() == DishRole.ONE_DISH)
-                .findFirst()
-                .orElse(null);
-        String cuisine = chosenCuisine(meal, chosenGenres);
-        if (cuisine == null) {
-            cuisine = main == null || main.getCuisine() == null || main.getCuisine().isBlank()
-                    ? DEFAULT_CUISINE : main.getCuisine();
-        }
-        String serving = main != null && main.getRole() == DishRole.ONE_DISH ? "한 그릇" : "한 상";
-
-        return STYLE_PREFIXES.get(order % STYLE_PREFIXES.size()) + " " + cuisine + " " + serving;
-
-    }
-
-    private static String chosenCuisine(ComposedMeal meal, List<String> chosenGenres) {
-
-        List<String> others = chosenGenres.stream().filter(genre -> !DEFAULT_CUISINE.equals(genre)).toList();
-        boolean present = others.stream().anyMatch(genre -> meal.dishes().stream()
-                .anyMatch(composed -> genre.equals(composed.dish().getCuisine())));
-
-        return present ? MealGenre.of(meal.dishes(), others) : null;
 
     }
 

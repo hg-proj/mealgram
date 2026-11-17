@@ -168,39 +168,6 @@ class MealServiceTest {
     }
 
     @Test
-    @DisplayName("AI 없이 붙이는 식단 이름에는 메인 요리의 장르와 일품 여부를 반영한다.")
-    void defaultStyleReflectsCuisine() {
-
-        ComposedMeal japanese = DishFixtures.meal(true, DishFixtures.dish("쌀밥", DishRole.RICE, 300, 6, 1, 65),
-                DishFixtures.dish("연어구이", DishRole.MAIN, "일식", 250, 20, 12, 15, List.of("생선"), List.of("구이"), List.of()));
-        ComposedMeal noodle = DishFixtures.meal(true, DishFixtures.oneDish("짜장면", 650, "면", ""));
-        givenCandidates(List.of(japanese, noodle));
-        when(llmClient.chat(anyString(), anyString())).thenThrow(new ExternalApiException("LLM", "x"));
-
-        MealResponse response = service.recommendForGuest(null, null, null, "유지", null, null, null);
-
-        assertEquals("담백한 일식 한 상", response.candidates().get(0).style());
-        assertTrue(response.candidates().get(1).style().endsWith("한 그릇"));
-
-    }
-
-    @Test
-    @DisplayName("선택한 장르의 요리가 들어 있으면 식단 이름에 그 장르를 쓴다.")
-    void defaultStyleUsesChosenGenre() {
-
-        ComposedMeal western = DishFixtures.meal(true, DishFixtures.dish("쌀밥", DishRole.RICE, 300, 6, 1, 65),
-                DishFixtures.dish("쇠고기장조림", DishRole.MAIN, 80, 14, 6, 4),
-                DishFixtures.dish("리코타치즈샐러드", DishRole.SIDE, "양식", 100, 8, 6, 5, List.of("치즈"), List.of(), List.of()));
-        givenCandidates(List.of(western));
-        when(llmClient.chat(anyString(), anyString())).thenThrow(new ExternalApiException("LLM", "x"));
-
-        MealResponse response = service.recommendForGuest(null, null, null, "유지", "양식", null, null);
-
-        assertEquals("담백한 양식 한 상", response.candidates().get(0).style());
-
-    }
-
-    @Test
     @DisplayName("같은 사진을 쓰는 후보는 세 식단에 겹치지 않게 고른다.")
     void picksDistinctPhotos() {
 
