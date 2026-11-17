@@ -30,6 +30,7 @@ Swagger UI: `/swagger-ui.html`, OpenAPI 문서: `/v3/api-docs`
 - [회원](#회원)
 - [재료](#재료)
 - [추천](#추천)
+- [장보기](#장보기)
 - [저장식단](#저장식단)
 
 ### 인증
@@ -93,6 +94,14 @@ candidates[] 항목
 | dishes[] | 식단에 들어간 요리 목록. 각 항목은 id, name, category(일품, 밥, 국, 메인 반찬, 곁들임 반찬, 김치와 절임, 후식), imageUrl(없으면 null), grams(분량), calorie(분량 기준 열량), ingredients[](양념을 뺀 재료 이름), seasonings[](장보기에만 쓰는 특수 양념, 재료 선택에는 나오지 않음) |
 | nutrition | calorie, carbohydrate, protein, fat 합계<br>carbohydrateRatio, proteinRatio, fatRatio 에너지 비율 %<br>targetCalorie 한 끼 목표 열량<br>verified 검증 여부, passed 기준 만족 여부, issues[] 기준에서 벗어난 점<br>영양 정보가 없는 요리가 있으면 합계와 비율은 null, verified는 false |
 
+
+### 장보기
+식단의 장보기 목록
+> /api/shopping-list
+
+| 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
+| --- | --- | --- | --- | --- | --- |
+| POST | /api/shopping-list | 식단의 요리들로 장보기 목록 계산, 로그인 없이 가능 | dishIds[]* 식단에 들어간 요리 id, 1~30개<br>ownedIngredientIds[] 이미 가진 재료 id, 회원은 내 재료가 자동으로 더해짐 | body | 200<br>toBuy[] 사야 할 재료<br>have[] 이미 가진 재료<br>seasonings[] 확인할 특수 양념(집에 보통 있는 양념은 없음)<br>각 항목은 name, category, usedIn[](쓰이는 요리 이름)<br>같은 재료는 한 줄로 합치고 분류 순서, 이름순으로 정렬<br>404 없는 요리나 재료 id |
 
 ### 저장식단
 마이페이지 - 내 식단
