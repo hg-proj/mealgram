@@ -25,6 +25,7 @@ public enum ErrorCode {
     INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "재료를 찾을 수 없습니다."),
     DUPLICATE_MY_INGREDIENT(HttpStatus.CONFLICT, "이미 등록한 재료입니다."),
     MY_INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "등록한 재료를 찾을 수 없습니다."),
+    DISH_NOT_FOUND(HttpStatus.NOT_FOUND, "요리를 찾을 수 없습니다."),
     MEAL_CANDIDATE_NOT_FOUND(HttpStatus.NOT_FOUND, "조건에 맞는 식단을 만들 수 없습니다."),
     MEAL_NOT_FOUND(HttpStatus.NOT_FOUND, "추천 결과를 찾을 수 없습니다."),
     DUPLICATE_SAVED_MEAL(HttpStatus.CONFLICT, "이미 저장한 식단입니다."),
