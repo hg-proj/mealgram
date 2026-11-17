@@ -260,8 +260,8 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
         MvcResult methodNotAllowed = mockMvc.perform(put("/api/members/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON).content("{}")).andReturn();
         MvcResult unsupportedMedia = mockMvc.perform(post("/api/saved-meals").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .contentType(MediaType.TEXT_PLAIN).content("recipeId=1")).andReturn();
-        MvcResult badPathVariable = getJson("/api/recipes/abc", token);
+                .contentType(MediaType.TEXT_PLAIN).content("mealId=1")).andReturn();
+        MvcResult badPathVariable = deleteJson("/api/saved-meals/abc", token);
         MvcResult brokenJson = mockMvc.perform(post("/api/saved-meals").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON).content("{broken")).andReturn();
 
