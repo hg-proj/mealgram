@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/error", "/images/**", "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/meals/samples").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ingredients", "/api/ingredients/catalog").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/meals").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/meals", "/api/shopping-list").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
