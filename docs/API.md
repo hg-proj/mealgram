@@ -1,5 +1,7 @@
 # mealgram API 명세
 
+Swagger UI: `/swagger-ui.html`, OpenAPI 문서: `/v3/api-docs`
+
 ## 화면 목록
 
 **필수**
@@ -13,7 +15,7 @@
 | 메인 | 없음. 버튼 라우팅만 |
 | 재료 입력 | 재료 |
 | 식단 후보 목록 | 추천 |
-| 상세 결과 | 레시피 |
+| 상세 결과 | 추천 |
 | 마이페이지 → 내정보 | 회원 |
 | 마이페이지 → 내식단 | 저장식단 |
 | 에러 화면 | 없음. 다른 API 응답 상태코드로 렌더링 |
@@ -28,7 +30,6 @@
 - [회원](#회원)
 - [재료](#재료)
 - [추천](#추천)
-- [레시피](#레시피)
 - [저장식단](#저장식단)
 
 ### 인증
@@ -74,27 +75,24 @@
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| POST | /api/meals | 식단 추천 요청, 로그인 없이 가능 | requiredId<br>subIds[]<br>ingredientId<br>goal 다이어트, 벌크업, 유지 중 하나<br>genre<br>birthDate, gender, height, weight, activityLevel 비회원만 사용, 비우면 기본 열량으로 계산 | body | 201<br>id 비회원은 null<br>relaxed<br>candidates[] 항상 3개 |
-| GET | /api/meals/samples | 랜덤 식단 3개, 로그인 없이 조회 | - | - | 200<br>goal 다이어트, 유지, 벌크업 순서<br>title<br>recipes[] id, name, category, imageUrl, portion<br>nutrition 추천 결과의 nutrition과 같음 |
+| POST | /api/meals | 식단 추천 요청, 로그인 없이 가능 | requiredId<br>subIds[]<br>ingredientId<br>goal 다이어트, 벌크업, 유지, 랜덤 중 하나, 랜덤이면 후보마다 목표를 다르게 맞춤<br>style 균형, 고단백, 저탄수, 저지방 중 하나, 비우면 균형<br>genre 한식, 양식을 쉼표로 이어서 보냄, 한식이 아닌 장르는 그 장르 요리를 반찬에 넣으려고 함<br>birthDate, gender, height, weight, activityLevel 비회원만 사용, 비우면 기본 열량으로 계산 | body | 201<br>id 비회원은 null<br>relaxed<br>candidates[] 항상 3개 |
+| GET | /api/meals/samples | 랜덤 식단 3개, 로그인 없이 조회 | - | - | 200<br>id 저장할 때 mealId로 씀, 24시간 보관<br>goal 다이어트, 유지, 벌크업 순서<br>genre 식단의 장르 하나<br>title<br>dishes[] id, name, category, imageUrl, grams, calorie<br>nutrition 추천 결과의 nutrition과 같음 |
 | GET | /api/meals/{id} | 특정 추천 결과 다시 조회, 회원만 | - | 경로변수 | 200<br>id<br>relaxed (조건 완화 여부)<br>candidates[] |
+
+일품(면, 덮밥 등)이 든 식단은 일품 하나와 어울리는 곁들임으로 구성하며 후보 세 개 중 한 개 정도만 나옵니다. 세 후보의 메인 요리는 서로 비슷하지 않게 고릅니다.
+
+영양 값은 일부가 추정치이며, 추정치가 든 식단은 nutrition.verified가 false입니다.
 
 candidates[] 항목
 
 | 필드 | 설명 |
 | --- | --- |
 | style | 식단 스타일 이름 |
-| reason | 한 줄 설명 |
-| recipes[] | 식단에 들어간 레시피 목록. 각 항목은 id, name, category, imageUrl(없으면 null), portion(분량 배수, 목표 열량에 맞춰 0.5~1.2) |
+| goal | 이 식단을 맞춘 목표 |
+| genre | 식단의 장르 하나, 요청에서 고른 장르의 요리가 들었으면 그 장르, 아니면 든 요리 중 가장 많은 장르, 개수가 같으면 한식 |
+| dishes[] | 식단에 들어간 요리 목록. 각 항목은 id, name, category(일품, 밥, 국, 메인 반찬, 곁들임 반찬, 김치와 절임, 후식), imageUrl(없으면 null), grams(분량), calorie(분량 기준 열량), ingredients[](양념을 뺀 재료 이름), seasonings[](장보기에만 쓰는 특수 양념, 재료 선택에는 나오지 않음) |
 | nutrition | calorie, carbohydrate, protein, fat 합계<br>carbohydrateRatio, proteinRatio, fatRatio 에너지 비율 %<br>targetCalorie 한 끼 목표 열량<br>verified 검증 여부, passed 기준 만족 여부, issues[] 기준에서 벗어난 점<br>영양 정보가 없는 요리가 있으면 합계와 비율은 null, verified는 false |
 
-
-### 레시피
-상세 결과
-> /api/recipes
-
-| 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
-| --- | --- | --- | --- | --- | --- |
-| GET | /api/recipes/{id} | 레시피 상세와 부족 재료, 로그인 없이 가능 | ingredientIds[] 비회원이 고른 재료, 회원은 내 재료 기준 | 경로변수, 쿼리 | 200<br>id, name, category, cookingMethod<br>calorie, carbohydrate, protein, fat, sodium 영양 정보가 없으면 null<br>cookingSteps<br>imageUrl /images/recipes/{id}.webp, 없으면 null<br>missingIngredients[] 양념 제외한 부족 재료<br>seasonings[] 필요한 양념 |
 
 ### 저장식단
 마이페이지 - 내 식단
@@ -102,6 +100,6 @@ candidates[] 항목
 
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
-| GET | /api/saved-meals | 내 식단(북마크) 목록 | page, size | 쿼리 | 200<br>id<br>recipeId<br>name |
-| POST | /api/saved-meals | 식단 북마크 저장 | recipeId* | body | 201<br>id |
-| DELETE | /api/saved-meals/{id} | 북마크 삭제 | - | 경로변수 | 204 |
+| GET | /api/saved-meals | 내 식단 목록, 최신순 | page, size, sort id 또는 createdAt | 쿼리 | 200<br>id<br>style<br>dishes[] 추천 결과의 dishes와 같음<br>nutrition 추천 결과의 nutrition과 같음<br>context 저장할 때 보낸 추천 조건, 없으면 null<br>createdAt |
+| POST | /api/saved-meals | 추천받은 식단 한 상 저장 | mealId* 추천 결과 id 또는 샘플 id<br>candidateIndex* 0~2, 샘플은 0<br>context 추천 조건, goal, style, genre, requiredName, ownedNames[] | body | 201<br>id<br>404 내 추천 결과가 아니거나 만료됨, 409 이미 저장함 |
+| DELETE | /api/saved-meals/{id} | 저장한 식단 삭제 | - | 경로변수 | 204 (다른 회원 소유 id면 404) |
