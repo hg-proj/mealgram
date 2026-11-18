@@ -199,7 +199,7 @@ class AuthServiceTest {
         ArgumentCaptor<String> saved = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
         verify(passwordResetCodeStore).save(eq(1L), saved.capture());
-        verify(passwordResetMailer).send(eq("a@example.com"), sent.capture());
+        verify(passwordResetMailer).send(eq("a@example.com"), org.mockito.ArgumentMatchers.any(), sent.capture());
         assertEquals(saved.getValue(), sent.getValue());
         assertTrue(saved.getValue().matches("\\d{6}"));
 
@@ -224,15 +224,17 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("가입되지 않은 이메일이어도 오류 없이 아무것도 하지 않는다.")
-    void ignoresUnknownEmail() {
+    @DisplayName("가입되지 않은 이메일이면 인증번호를 만들지 않고 오류로 알린다.")
+    void rejectsUnknownEmail() {
 
         when(memberRepository.findByEmail("none@example.com")).thenReturn(Optional.empty());
 
-        authService.forgotPassword(new ForgotPasswordRequest("none@example.com"));
+        BusinessException e = assertThrows(BusinessException.class,
+                () -> authService.forgotPassword(new ForgotPasswordRequest("none@example.com")));
 
+        assertEquals(ErrorCode.EMAIL_NOT_REGISTERED, e.getErrorCode());
         verify(passwordResetCodeStore, never()).save(anyLong(), anyString());
-        verify(passwordResetMailer, never()).send(anyString(), anyString());
+        verify(passwordResetMailer, never()).send(anyString(), org.mockito.ArgumentMatchers.any(), anyString());
 
     }
 
@@ -247,7 +249,7 @@ class AuthServiceTest {
         authService.forgotPassword(new ForgotPasswordRequest("a@example.com"));
 
         verify(passwordResetCodeStore, never()).save(anyLong(), anyString());
-        verify(passwordResetMailer, never()).send(anyString(), anyString());
+        verify(passwordResetMailer, never()).send(anyString(), org.mockito.ArgumentMatchers.any(), anyString());
 
     }
 
@@ -355,6 +357,25 @@ class AuthServiceTest {
                 () -> authService.resetPassword(new ResetPasswordRequest("token", "newPassword1")));
 
         assertEquals(ErrorCode.INVALID_RESET_TOKEN, e.getErrorCode());
+
+    }
+
+    @Test
+    @DisplayName("메일을 보내지 못하면 저장한 인증번호와 재요청 대기를 되돌린다.")
+    void rollsBackWhenMailFails() {
+
+        Member member = Member.builder().id(1L).email("a@example.com").build();
+        when(memberRepository.findByEmail("a@example.com")).thenReturn(Optional.of(member));
+        when(passwordResetTokenStore.acquireCooldown(1L)).thenReturn(true);
+        org.mockito.Mockito.doThrow(new BusinessException(ErrorCode.MAIL_SEND_FAILED))
+                .when(passwordResetMailer).send(eq("a@example.com"), org.mockito.ArgumentMatchers.any(), anyString());
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authService.forgotPassword(new ForgotPasswordRequest("a@example.com")));
+
+        assertEquals(ErrorCode.MAIL_SEND_FAILED, exception.getErrorCode());
+        verify(passwordResetCodeStore).delete(1L);
+        verify(passwordResetTokenStore).releaseCooldown(1L);
 
     }
 

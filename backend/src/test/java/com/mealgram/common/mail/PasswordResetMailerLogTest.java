@@ -1,6 +1,7 @@
 package com.mealgram.common.mail;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -16,8 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+
+import com.mealgram.common.exception.BusinessException;
+
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -65,7 +70,7 @@ class PasswordResetMailerLogTest {
 
         when(provider.getIfAvailable()).thenReturn(null);
 
-        new PasswordResetMailer(provider, "", true).send(EMAIL, CODE);
+        new PasswordResetMailer(provider, "", true, "https://mealgram.test").send(EMAIL, "한결", CODE);
 
         assertTrue(logged().contains(CODE));
 
@@ -77,7 +82,7 @@ class PasswordResetMailerLogTest {
 
         when(provider.getIfAvailable()).thenReturn(null);
 
-        new PasswordResetMailer(provider, "", false).send(EMAIL, CODE);
+        assertThrows(BusinessException.class, () -> new PasswordResetMailer(provider, "", false, "https://mealgram.test").send(EMAIL, "한결", CODE));
 
         assertFalse(logged().contains(CODE));
         assertFalse(logged().contains(EMAIL));
@@ -90,14 +95,15 @@ class PasswordResetMailerLogTest {
     void failureLogDoesNotContainEmail() {
 
         JavaMailSender mailSender = mock(JavaMailSender.class);
+        when(mailSender.createMimeMessage()).thenAnswer(invocation -> new MimeMessage((Session) null));
         when(provider.getIfAvailable()).thenReturn(mailSender);
-        doThrow(new MailSendException("연결 실패")).when(mailSender).send(any(SimpleMailMessage.class));
+        doThrow(new MailSendException("연결 실패")).when(mailSender).send(any(MimeMessage.class));
 
-        new PasswordResetMailer(provider, "", false).send(EMAIL, CODE);
+        assertThrows(BusinessException.class, () -> new PasswordResetMailer(provider, "", false, "https://mealgram.test").send(EMAIL, "한결", CODE));
 
         assertFalse(logged().contains(EMAIL));
         assertFalse(logged().contains(CODE));
-        assertTrue(logged().contains("재설정 메일 발송에 실패했습니다"));
+        assertTrue(logged().contains("인증번호 메일 발송에 실패했습니다"));
 
     }
 

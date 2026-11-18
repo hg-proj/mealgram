@@ -140,15 +140,24 @@ public class AuthService {
 
     public void forgotPassword(ForgotPasswordRequest request) {
 
-        memberRepository.findByEmail(normalizeEmail(request.email())).ifPresent(member -> {
-            if (!passwordResetTokenStore.acquireCooldown(member.getId())) {
-                return;
-            }
+        Member member = memberRepository.findByEmail(normalizeEmail(request.email()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.EMAIL_NOT_REGISTERED));
 
-            String code = generateResetCode();
-            passwordResetCodeStore.save(member.getId(), code);
-            passwordResetMailer.send(member.getEmail(), code);
-        });
+        if (!passwordResetTokenStore.acquireCooldown(member.getId())) {
+            return;
+        }
+
+        String code = generateResetCode();
+        passwordResetCodeStore.save(member.getId(), code);
+
+        try {
+            passwordResetMailer.send(member.getEmail(), member.getNickname(), code);
+        } catch (BusinessException e) {
+            passwordResetCodeStore.delete(member.getId());
+            passwordResetTokenStore.releaseCooldown(member.getId());
+
+            throw e;
+        }
     }
 
     public VerifyResetCodeResponse verifyResetCode(VerifyResetCodeRequest request) {

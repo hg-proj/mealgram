@@ -93,7 +93,7 @@ class EmailNormalizationTest {
         authService.forgotPassword(new ForgotPasswordRequest("Han@EXAMPLE.com"));
 
         verify(passwordResetCodeStore).save(anyLong(), anyString());
-        verify(passwordResetMailer).send(anyString(), anyString());
+        verify(passwordResetMailer).send(anyString(), org.mockito.ArgumentMatchers.any(), anyString());
 
     }
 

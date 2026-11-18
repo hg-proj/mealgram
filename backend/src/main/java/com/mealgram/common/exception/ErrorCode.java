@@ -18,6 +18,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호가 일치하지 않습니다."),
     LOGIN_BLOCKED(HttpStatus.TOO_MANY_REQUESTS, "로그인 시도가 너무 많습니다. 15분 뒤에 다시 시도해 주세요."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다. 다시 로그인해 주세요."),
+    EMAIL_NOT_REGISTERED(HttpStatus.NOT_FOUND, "가입되지 않은 이메일입니다."),
     INVALID_RESET_CODE(HttpStatus.BAD_REQUEST, "인증번호가 올바르지 않거나 만료되었습니다. 다시 확인해 주세요."),
     RESET_CODE_BLOCKED(HttpStatus.TOO_MANY_REQUESTS, "인증번호를 너무 많이 틀렸습니다. 10분 뒤에 다시 시도해 주세요."),
     INVALID_RESET_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않거나 만료된 재설정 요청입니다. 처음부터 다시 진행해 주세요."),
@@ -33,6 +34,7 @@ public enum ErrorCode {
     SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "서버가 일시적으로 응답하지 못합니다. 잠시 후 다시 시도해 주세요."),
     SAVED_MEAL_NOT_FOUND(HttpStatus.NOT_FOUND, "저장한 식단을 찾을 수 없습니다."),
     MEAL_GENERATION_FAILED(HttpStatus.BAD_GATEWAY, "식단 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."),
+    MAIL_SEND_FAILED(HttpStatus.BAD_GATEWAY, "인증번호 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요."),
     EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "외부 서비스 호출에 실패했습니다. 잠시 후 다시 시도해 주세요."),
     RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "식단 추천 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
 

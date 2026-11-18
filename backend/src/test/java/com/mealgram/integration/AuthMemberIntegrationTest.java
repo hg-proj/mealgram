@@ -164,7 +164,7 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
 
         assertEquals(200, status(postJson("/api/auth/forgot-password", Map.of("email", member.email().toUpperCase()), null)));
         ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
-        verify(passwordResetMailer).send(eq(member.email()), code.capture());
+        verify(passwordResetMailer).send(eq(member.email()), org.mockito.ArgumentMatchers.any(), code.capture());
         assertTrue(code.getValue().matches("\\d{6}"));
 
         assertEquals(400, status(postJson("/api/auth/verify-reset-code", Map.of("email", member.email(), "code", wrongCode(code.getValue())), null)));
@@ -195,7 +195,7 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
         Member member = signupAndLogin("rcb");
         assertEquals(200, status(postJson("/api/auth/forgot-password", Map.of("email", member.email()), null)));
         ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
-        verify(passwordResetMailer).send(eq(member.email()), code.capture());
+        verify(passwordResetMailer).send(eq(member.email()), org.mockito.ArgumentMatchers.any(), code.capture());
 
         for (int i = 0; i < 5; i++) {
             assertEquals(400, status(postJson("/api/auth/verify-reset-code", Map.of("email", member.email(), "code", wrongCode(code.getValue())), null)));
@@ -206,12 +206,12 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("가입하지 않은 이메일도 200으로 응답하고 메일은 보내지 않는다.")
+    @DisplayName("가입하지 않은 이메일은 404로 알리고 메일은 보내지 않는다.")
     void forgotPasswordWithUnknownEmail() throws Exception {
 
-        assertEquals(200, status(postJson("/api/auth/forgot-password", Map.of("email", unique("nobody") + "@example.com"), null)));
+        assertEquals(404, status(postJson("/api/auth/forgot-password", Map.of("email", unique("nobody") + "@example.com"), null)));
 
-        verify(passwordResetMailer, never()).send(eq("nobody@example.com"), anyString());
+        verify(passwordResetMailer, never()).send(eq("nobody@example.com"), org.mockito.ArgumentMatchers.any(), anyString());
 
     }
 
