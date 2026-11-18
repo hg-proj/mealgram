@@ -3,13 +3,13 @@ services:
   # DB
   postgres:
 
-    image: pgvector/pgvector:pg16           # pgvector: 벡터 저장/비교 검색 확장, pg16: 안정 버전
+    image: pgvector/pgvector:pg16
     container_name: mealgram-postgres
 
     environment:
       POSTGRES_DB: mealgram
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
 
     ports:
       - "5432:5432" 
@@ -55,8 +55,13 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
-      RECIPE_IMPORT_ENABLED: ${RECIPE_IMPORT_ENABLED:-false}
-      RECIPE_EMBEDDING_ENABLED: ${RECIPE_EMBEDDING_ENABLED:-false}
+      APP_RESET_CODE_LOG: ${APP_RESET_CODE_LOG:-true}
+      INGREDIENT_IMPORT_ENABLED: ${INGREDIENT_IMPORT_ENABLED:-false}
+      DISH_IMPORT_ENABLED: ${DISH_IMPORT_ENABLED:-false}
+      SPRING_MAIL_HOST:
+      SPRING_MAIL_PORT:
+      SPRING_MAIL_USERNAME:
+      SPRING_MAIL_PASSWORD:
 
     depends_on:                         # 서비스 실행 순서 지정
       postgres:

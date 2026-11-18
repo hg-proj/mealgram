@@ -49,6 +49,10 @@ public class PasswordResetTokenStore {
 
     }
 
+    public void releaseCooldown(Long memberId) {
+        redisTemplate.delete(COOLDOWN_KEY_PREFIX + memberId);
+    }
+
     public boolean acquireCooldown(Long memberId) {
 
         return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(COOLDOWN_KEY_PREFIX + memberId, "1", COOLDOWN));

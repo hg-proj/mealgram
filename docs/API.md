@@ -41,7 +41,7 @@ Swagger UI: `/swagger-ui.html`, OpenAPI 문서: `/v3/api-docs`
 | --- | --- | --- | --- | --- | --- |
 | POST | /api/auth/login | 로그인 | loginId<br>password | body | 200<br>accessToken<br>refreshToken |
 | POST | /api/auth/signup | 회원가입 | nickname*<br>loginId*<br>password*<br>email*<br>birthDate (yyyy-MM-dd, 만 3세 이상 120세 이하)<br>gender<br>height<br>weight<br>activityLevel (신체활동계수) | body | 201<br>id |
-| POST | /api/auth/forgot-password | 비밀번호 재설정 인증번호 메일 발송, 숫자 6자리, 10분 유효, 가입 여부와 관계없이 200, 같은 회원은 60초 간격 | email* | body | 200 |
+| POST | /api/auth/forgot-password | 비밀번호 재설정 인증번호 메일 발송, 숫자 6자리, 10분 유효, 같은 회원은 60초 간격, 가입되지 않은 이메일은 404, 메일을 보내지 못하면 502 | email* | body | 200 |
 | POST | /api/auth/verify-reset-code | 인증번호 확인, 이메일별 5번 틀리면 10분 동안 429 | email*<br>code* (숫자 6자리) | body | 200<br>resetToken (10분 유효) |
 | POST | /api/auth/reset-password | 새 비밀번호로 변경, 인증번호 확인으로 받은 resetToken은 한 번만 사용 | token* (resetToken)<br>newPassword* | body | 200 |
 | POST | /api/auth/refresh | accessToken 재발급 | refreshToken* | body | 200<br>accessToken |

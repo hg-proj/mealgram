@@ -43,6 +43,10 @@ public class PasswordResetCodeStore {
 
     }
 
+    public void delete(Long memberId) {
+        redisTemplate.delete(CODE_KEY_PREFIX + memberId);
+    }
+
     public boolean isBlocked(String email) {
 
         String count = redisTemplate.opsForValue().get(FAIL_KEY_PREFIX + email);
