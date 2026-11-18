@@ -1,5 +1,7 @@
 package com.mealgram.common.exception;
 
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -107,6 +109,24 @@ class GlobalExceptionHandlerTest {
 
         assertError(handler.handleBusinessException(new BusinessException(ErrorCode.MEMBER_NOT_FOUND)),
                 HttpStatus.NOT_FOUND, ErrorCode.MEMBER_NOT_FOUND);
+
+    }
+
+    @Test
+    @DisplayName("데이터 제약 조건을 어기면 409 공통 오류 형식으로 응답한다.")
+    void dataIntegrityViolation() {
+
+        assertError(handler.handleDataIntegrity(new DataIntegrityViolationException("중복")),
+                HttpStatus.CONFLICT, ErrorCode.DATA_CONFLICT);
+
+    }
+
+    @Test
+    @DisplayName("저장소에 연결하지 못하면 503 공통 오류 형식으로 응답한다.")
+    void storeUnavailable() {
+
+        assertError(handler.handleStoreUnavailable(new RedisConnectionFailureException("연결 실패")),
+                HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.SERVICE_UNAVAILABLE);
 
     }
 

@@ -1,5 +1,7 @@
 package com.mealgram.common.security;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.mock.env.MockEnvironment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -85,6 +87,27 @@ class JwtTokenProviderTest {
 
         assertFalse(provider.isAccessToken(legacy));
         assertFalse(provider.isRefreshToken(legacy));
+
+    }
+
+    @Test
+    @DisplayName("비밀값이 없으면 개발에서는 임시 키로 토큰을 만든다.")
+    void usesEphemeralKeyWithoutSecretInDev() {
+
+        JwtTokenProvider dev = new JwtTokenProvider("", new MockEnvironment());
+
+        assertTrue(dev.isAccessToken(dev.generateAccessToken(1L)));
+
+    }
+
+    @Test
+    @DisplayName("비밀값이 없으면 운영에서는 시작하지 않는다.")
+    void failsWithoutSecretInProd() {
+
+        MockEnvironment prod = new MockEnvironment();
+        prod.setActiveProfiles("prod");
+
+        assertThrows(IllegalStateException.class, () -> new JwtTokenProvider("", prod));
 
     }
 

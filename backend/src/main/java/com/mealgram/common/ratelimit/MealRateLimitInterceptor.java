@@ -3,6 +3,7 @@ package com.mealgram.common.ratelimit;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,9 +15,11 @@ import com.mealgram.common.exception.ErrorCode;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 // 식단 추천 호출 횟수 제한
 
+@Slf4j
 @Component
 public class MealRateLimitInterceptor implements HandlerInterceptor {
 
@@ -49,16 +52,29 @@ public class MealRateLimitInterceptor implements HandlerInterceptor {
         Long memberId = currentMemberId();
         String key = memberId == null ? KEY_PREFIX + GUEST_PREFIX + request.getRemoteAddr() : KEY_PREFIX + memberId;
         int limit = memberId == null ? guestMaxRequests : maxRequests;
-        Long count = redisTemplate.opsForValue().increment(key);
-        if (count == null) {
+        Long count;
+        Long remaining = null;
+
+        try {
+            count = redisTemplate.opsForValue().increment(key);
+
+            if (count == null) {
+                return true;
+            }
+
+            if (count == 1 || redisTemplate.getExpire(key) < 0) {
+                redisTemplate.expire(key, window);
+            }
+
+            if (count > limit) {
+                remaining = redisTemplate.getExpire(key);
+            }
+        } catch (DataAccessException e) {
+            log.warn("호출 제한 저장소에 연결하지 못해 제한 없이 통과시킵니다: {}", e.getClass().getSimpleName());
             return true;
-        }
-        if (count == 1 || redisTemplate.getExpire(key) < 0) {
-            redisTemplate.expire(key, window);
         }
 
         if (count > limit) {
-            Long remaining = redisTemplate.getExpire(key);
             response.setHeader(RETRY_AFTER, String.valueOf(remaining == null || remaining < 1 ? 1 : remaining));
             throw new BusinessException(ErrorCode.RATE_LIMIT_EXCEEDED);
         }

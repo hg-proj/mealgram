@@ -1,5 +1,6 @@
 package com.mealgram.common.ratelimit;
 
+import org.springframework.data.redis.RedisConnectionFailureException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -165,6 +166,16 @@ class MealRateLimitInterceptorTest {
         assertEquals(ErrorCode.RATE_LIMIT_EXCEEDED, e.getErrorCode());
 
         assertTrue(callFrom("10.0.0.2", "POST", new MockHttpServletResponse()));
+
+    }
+
+    @Test
+    @DisplayName("호출 제한 저장소에 연결하지 못하면 제한 없이 통과시킨다.")
+    void allowsWhenStoreIsDown() {
+
+        when(valueOperations.increment(anyString())).thenThrow(new RedisConnectionFailureException("연결 실패"));
+
+        assertTrue(call("POST", new MockHttpServletResponse()));
 
     }
 
