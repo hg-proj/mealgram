@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -66,6 +67,9 @@ public abstract class IntegrationTestSupport {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    @Autowired
+    protected StringRedisTemplate redisTemplate;
 
     @MockitoBean
     protected LlmClient llmClient;
@@ -156,10 +160,20 @@ public abstract class IntegrationTestSupport {
 
     }
 
+    // 인증번호를 요청하고 저장소에서 꺼내 확인까지 마침, 메일은 가짜라 실제로 보내지 않음
+    protected void verifyEmail(String email) throws Exception {
+
+        postJson("/api/auth/signup/send-code", Map.of("email", email), null);
+        String code = redisTemplate.opsForValue().get("signup:code:" + email.strip().toLowerCase());
+        postJson("/api/auth/signup/verify-code", Map.of("email", email, "code", code), null);
+
+    }
+
     protected Member signupAndLogin(String prefix) throws Exception {
 
         String loginId = unique(prefix);
         String email = loginId + "@example.com";
+        verifyEmail(email);
         postJson("/api/auth/signup", Map.of("nickname", "테스터", "loginId", loginId, "password", PASSWORD,
                 "email", email, "birthDate", birthDateYearsAgo(30), "gender", "FEMALE", "height", 160, "weight", 55, "activityLevel", "LIGHT"), null);
         JsonNode login = body(postJson("/api/auth/login", Map.of("loginId", loginId, "password", PASSWORD), null));

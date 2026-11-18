@@ -45,6 +45,7 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
     void signupLoginAndReadProfile() throws Exception {
 
         String loginId = unique("flow");
+        verifyEmail(loginId + "@example.com");
         MvcResult signup = postJson("/api/auth/signup", Map.of("nickname", "한결", "loginId", loginId, "password", password(),
                 "email", loginId.toUpperCase() + "@Example.COM", "birthDate", birthDateYearsAgo(30), "gender", "FEMALE",
                 "height", 160,
@@ -308,6 +309,78 @@ class AuthMemberIntegrationTest extends IntegrationTestSupport {
         assertEquals(200, status(health));
         assertEquals("UP", body(health).get("status").asString());
         assertEquals(401, status(env));
+
+    }
+
+    @Test
+    @DisplayName("이메일 인증 없이 가입하면 400으로 거절한다.")
+    void rejectsSignupWithoutVerification() throws Exception {
+
+        MvcResult result = postJson("/api/auth/signup", Map.of("nickname", "한결", "loginId", unique("noverify"),
+                "password", password(), "email", unique("noverify") + "@example.com"), null);
+
+        assertEquals(400, status(result));
+        assertEquals("EMAIL_NOT_VERIFIED", errorCode(result));
+
+    }
+
+    @Test
+    @DisplayName("인증번호가 틀리면 400이고 맞는 인증번호로는 인증을 마칠 수 있다.")
+    void verifiesSignupCode() throws Exception {
+
+        String email = unique("code") + "@example.com";
+
+        assertEquals(200, status(postJson("/api/auth/signup/send-code", Map.of("email", email), null)));
+        String code = redisTemplate.opsForValue().get("signup:code:" + email);
+        String wrong = code.equals("000000") ? "111111" : "000000";
+
+        MvcResult wrongResult = postJson("/api/auth/signup/verify-code", Map.of("email", email, "code", wrong), null);
+        MvcResult rightResult = postJson("/api/auth/signup/verify-code", Map.of("email", email, "code", code), null);
+
+        assertEquals(400, status(wrongResult));
+        assertEquals("INVALID_SIGNUP_CODE", errorCode(wrongResult));
+        assertEquals(200, status(rightResult));
+
+    }
+
+    @Test
+    @DisplayName("이미 가입된 이메일에는 인증번호를 보내지 않고 409로 알린다.")
+    void rejectsSendCodeForRegisteredEmail() throws Exception {
+
+        Member member = signupAndLogin("sent");
+
+        MvcResult result = postJson("/api/auth/signup/send-code", Map.of("email", member.email()), null);
+
+        assertEquals(409, status(result));
+        assertEquals("DUPLICATE_EMAIL", errorCode(result));
+
+    }
+
+    @Test
+    @DisplayName("가입을 마치면 같은 인증으로 다시 가입할 수 없다.")
+    void verificationIsSingleUse() throws Exception {
+
+        String loginId = unique("once");
+        String email = loginId + "@example.com";
+        verifyEmail(email);
+        Map<String, Object> request = Map.of("nickname", "한결", "loginId", loginId, "password", password(), "email", email);
+
+        assertEquals(201, status(postJson("/api/auth/signup", request, null)));
+
+        MvcResult again = postJson("/api/auth/signup", Map.of("nickname", "한결", "loginId", unique("once"),
+                "password", password(), "email", email), null);
+
+        assertEquals(409, status(again));
+
+    }
+
+    @Test
+    @DisplayName("인증번호 형식이 숫자 6자리가 아니면 400으로 거절한다.")
+    void rejectsMalformedCode() throws Exception {
+
+        MvcResult result = postJson("/api/auth/signup/verify-code", Map.of("email", "a@example.com", "code", "12ab"), null);
+
+        assertEquals(400, status(result));
 
     }
 

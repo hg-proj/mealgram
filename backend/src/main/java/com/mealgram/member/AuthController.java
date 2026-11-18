@@ -14,6 +14,8 @@ import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.ResetPasswordRequest;
+import com.mealgram.member.dto.SignupCodeRequest;
+import com.mealgram.member.dto.SignupCodeVerifyRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
 import com.mealgram.member.dto.VerifyResetCodeRequest;
@@ -21,7 +23,7 @@ import com.mealgram.member.dto.VerifyResetCodeResponse;
 
 import jakarta.validation.Valid;
 
-// 회원가입, 로그인, 토큰 재발급, 로그아웃, 비밀번호 재설정 API 엔드포인트
+// 인증 API 엔드포인트
 
 @RestController 
 @RequestMapping("/auth")
@@ -64,6 +66,24 @@ public class AuthController {
         authService.logout(request);
 
         return ResponseEntity.noContent().build();
+
+    }
+
+    @PostMapping("/signup/send-code")
+    public ResponseEntity<Void> sendSignupCode(@Valid @RequestBody SignupCodeRequest request) {
+
+        authService.sendSignupCode(request);
+
+        return ResponseEntity.ok().build();
+
+    }
+
+    @PostMapping("/signup/verify-code")
+    public ResponseEntity<Void> verifySignupCode(@Valid @RequestBody SignupCodeVerifyRequest request) {
+
+        authService.verifySignupCode(request);
+
+        return ResponseEntity.ok().build();
 
     }
 

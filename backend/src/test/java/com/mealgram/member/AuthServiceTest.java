@@ -28,6 +28,7 @@ import com.mealgram.common.security.LoginAttemptStore;
 import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
+import com.mealgram.common.security.SignupVerificationStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
@@ -49,6 +50,7 @@ class AuthServiceTest {
     private PasswordResetTokenStore passwordResetTokenStore;
     private PasswordResetCodeStore passwordResetCodeStore;
     private PasswordResetMailer passwordResetMailer;
+    private SignupVerificationStore signupVerificationStore;
     private JwtTokenProvider provider;
     private AuthService authService;
 
@@ -62,8 +64,10 @@ class AuthServiceTest {
         passwordResetTokenStore = mock(PasswordResetTokenStore.class);
         passwordResetCodeStore = mock(PasswordResetCodeStore.class);
         passwordResetMailer = mock(PasswordResetMailer.class);
+        signupVerificationStore = mock(SignupVerificationStore.class);
         authService = new AuthService(memberRepository, passwordEncoder, provider, refreshTokenStore,
-                passwordResetTokenStore, passwordResetCodeStore, passwordResetMailer, mock(LoginAttemptStore.class));
+                passwordResetTokenStore, passwordResetCodeStore, passwordResetMailer, mock(LoginAttemptStore.class),
+                signupVerificationStore);
 
     }
 
