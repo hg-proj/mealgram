@@ -2,6 +2,8 @@ package com.mealgram.common.exception;
 
 import java.util.List;
 
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -97,6 +99,22 @@ public class GlobalExceptionHandler {
                         .status(ErrorCode.EXTERNAL_API_FAILED.getHttpStatus())
                         .body(ErrorResponse.of(ErrorCode.EXTERNAL_API_FAILED));
 
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException e) {
+        log.warn("데이터 제약 조건을 어겼습니다: {}", e.getClass().getSimpleName());
+        return ResponseEntity
+                        .status(ErrorCode.DATA_CONFLICT.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.DATA_CONFLICT));
+    }
+
+    @ExceptionHandler(DataAccessResourceFailureException.class)
+    public ResponseEntity<ErrorResponse> handleStoreUnavailable(DataAccessResourceFailureException e) {
+        log.error("저장소에 연결하지 못했습니다: {}", e.getClass().getSimpleName());
+        return ResponseEntity
+                        .status(ErrorCode.SERVICE_UNAVAILABLE.getHttpStatus())
+                        .body(ErrorResponse.of(ErrorCode.SERVICE_UNAVAILABLE));
     }
 
     @ExceptionHandler(Exception.class)

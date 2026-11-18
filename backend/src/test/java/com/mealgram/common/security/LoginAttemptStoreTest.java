@@ -1,5 +1,9 @@
 package com.mealgram.common.security;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -102,6 +106,20 @@ class LoginAttemptStoreTest {
         store.reset("hangyeol01");
 
         verify(redisTemplate).delete("login:fail:hangyeol01");
+
+    }
+
+    @Test
+    @DisplayName("저장소에 연결하지 못하면 로그인을 막지 않고 실패 기록도 건너뛴다.")
+    void ignoresStoreFailure() {
+
+        when(valueOperations.get(anyString())).thenThrow(new RedisConnectionFailureException("연결 실패"));
+        when(valueOperations.increment(anyString())).thenThrow(new RedisConnectionFailureException("연결 실패"));
+        doThrow(new RedisConnectionFailureException("연결 실패")).when(redisTemplate).delete(anyString());
+
+        assertFalse(store.isBlocked("hangyeol01"));
+        assertDoesNotThrow(() -> store.recordFailure("hangyeol01"));
+        assertDoesNotThrow(() -> store.reset("hangyeol01"));
 
     }
 
