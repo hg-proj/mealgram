@@ -70,4 +70,23 @@ class ProfilePropertiesTest {
 
     }
 
+    @Test
+    @DisplayName("운영 프로필은 정해진 프록시가 보낸 원래 주소만 믿는다.")
+    void prodTrustsForwardedHeadersOnlyFromProxies() throws IOException {
+
+        Properties prod = load("application-prod.properties");
+
+        assertEquals("native", prod.getProperty("server.forward-headers-strategy"));
+        assertTrue(prod.getProperty("server.tomcat.remoteip.internal-proxies").contains("10\\..*"));
+
+    }
+
+    @Test
+    @DisplayName("기본 설정에는 토큰 서명 키 값을 두지 않는다.")
+    void defaultHasNoJwtSecretValue() throws IOException {
+
+        assertEquals("${JWT_SECRET:}", load("application.properties").getProperty("jwt.secret"));
+
+    }
+
 }

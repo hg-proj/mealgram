@@ -29,7 +29,7 @@ public class LlmClient {
     private static final String USER_ROLE = "user";
     private static final String JSON_FORMAT = "json_object";
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
-    private static final Duration READ_TIMEOUT = Duration.ofSeconds(120);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(20);
     private static final int MAX_TOKENS = 2000;
 
     private final RestClient restClient;
@@ -39,7 +39,7 @@ public class LlmClient {
     public LlmClient(@Value("${openai.api-key}") String apiKey,
                      @Value("${openai.chat-model}") String model,
                      @Value("${openai.chat-url}") String url) {
-        HttpClient httpClient = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
+        HttpClient httpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(CONNECT_TIMEOUT).build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(READ_TIMEOUT);
         this.restClient = RestClient.builder().baseUrl(url).requestFactory(requestFactory).build();
