@@ -1,3 +1,7 @@
+import { NavLink } from 'react-router';
+import phoneIcon from '@/assets/phone.svg';
+import MaskIcon from '@/components/ui/MaskIcon';
+import { paths } from '@/config/paths';
 import { site } from '@/config/site';
 
 // 사이트 푸터
@@ -10,9 +14,15 @@ export default function Footer() {
           aria-label="푸터 링크"
           className="flex flex-wrap gap-x-[22px] gap-y-2 pb-7 text-[13px]"
         >
-          <span>서비스 소개</span>
-          <span>이용약관</span>
-          <span className="font-bold">개인정보처리방침</span>
+          <NavLink to={paths.about} className={({ isActive }) => (isActive ? 'font-bold' : '')}>
+            서비스 소개
+          </NavLink>
+          <NavLink to={paths.terms} className={({ isActive }) => (isActive ? 'font-bold' : '')}>
+            이용약관
+          </NavLink>
+          <NavLink to={paths.privacy} className="font-bold">
+            개인정보처리방침
+          </NavLink>
         </nav>
         <div className="grid grid-cols-[1fr_380px] items-start gap-y-6 max-[820px]:grid-cols-1">
           <div>
@@ -27,15 +37,7 @@ export default function Footer() {
             <p className="mt-3 text-xs leading-[1.9] opacity-85">{site.copyright}</p>
           </div>
           <div className="flex items-center gap-3.5">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[34px] flex-none">
-              <path
-                d="M6 3.5h3l1.5 4-2 1.5a11 11 0 006 6l1.5-2 4 1.5v3a2 2 0 01-2 2A15 15 0 014 5.5a2 2 0 012-2z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <MaskIcon src={phoneIcon} className="size-[34px] flex-none" />
             <div>
               <b className="block text-xl font-bold tracking-[-0.03em]">
                 고객센터 <em className="ml-1 text-lg not-italic">{site.phone}</em>

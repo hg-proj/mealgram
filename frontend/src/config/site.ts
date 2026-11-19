@@ -7,5 +7,6 @@ export const site = {
   email: 'mealgram@demo.com',
   phone: '1577-XXXX',
   hours: ['평일 10:00~17:00 (점심 12:00~13:00)', '주말, 공휴일 휴무'],
+  effectiveDate: '2026년 11월 9일',
   copyright: 'Copyright 2026 mealgram. All Rights Reserved.',
 } as const;

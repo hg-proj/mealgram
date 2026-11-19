@@ -23,6 +23,18 @@ export const router = createBrowserRouter([
         path: paths.forgotPassword,
         lazy: async () => ({ Component: (await import('@/routes/ForgotPassword')).default }),
       },
+      {
+        path: paths.about,
+        lazy: async () => ({ Component: (await import('@/routes/About')).default }),
+      },
+      {
+        path: paths.terms,
+        lazy: async () => ({ Component: (await import('@/routes/Terms')).default }),
+      },
+      {
+        path: paths.privacy,
+        lazy: async () => ({ Component: (await import('@/routes/Privacy')).default }),
+      },
       { path: '*', element: <ErrorPage status={404} /> },
     ],
   },
