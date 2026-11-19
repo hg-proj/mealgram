@@ -25,7 +25,7 @@ export function isValidPassword(password: string): boolean {
   return types >= 3 ? password.length >= 8 : types === 2 && password.length >= 10;
 }
 
-const inRange = (min: number, max: number) => (value: string) => {
+export const inRange = (min: number, max: number) => (value: string) => {
   if (value === '') {
     return true;
   }
@@ -70,12 +70,14 @@ export function birthDateIssue(
   return age < MIN_AGE || age > MAX_AGE ? 'birthRange' : null;
 }
 
+export const nicknameSchema = z
+  .string()
+  .min(1, messages.validation.nicknameRequired)
+  .refine((v) => v.length >= 2 && v.length <= 10, messages.validation.nickname);
+
 export const signupSchema = z
   .object({
-    nickname: z
-      .string()
-      .min(1, messages.validation.nicknameRequired)
-      .refine((v) => v.length >= 2 && v.length <= 10, messages.validation.nickname),
+    nickname: nicknameSchema,
     loginId: z
       .string()
       .min(1, messages.validation.loginIdRequired)

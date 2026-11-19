@@ -6,11 +6,18 @@ export const messages = {
   signupFailed: '가입하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   resetSendFailed: '인증번호를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.',
   resetVerifyFailed: '인증번호를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  recommendFailed: '식단을 추천받지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  catalogFailed: '재료 목록을 불러오지 못했습니다.',
   resetFailed: '비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   notice: {
+    requiredOnly: '필수 재료는 1개만 담을 수 있습니다.',
+    loginForMyIngredients: '로그인하면 내 재료를 불러오고 저장할 수 있습니다.',
     resetCodeSent: '인증번호가 전송되었습니다. 10분 안에 입력해 주세요.',
     resetCodeVerified: '인증이 완료되었습니다.',
     resetCodeExpired: '인증번호가 만료되었습니다. 다시 보내 주세요.',
+    quickLoginForBody: '로그인하면 신체정보로 추천받을 수 있습니다.',
+    quickNoBody: '저장된 신체정보가 없습니다.',
+    quickMaking: '식단을 만드는 중입니다.',
   },
   validation: {
     loginIdRequired: '아이디를 입력해 주세요.',

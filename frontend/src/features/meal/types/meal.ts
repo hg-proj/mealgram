@@ -16,17 +16,45 @@ export type NutritionSummary = {
   issues: string[];
 };
 
-export type MealRecipe = {
+export type MealDish = {
   id: number;
   name: string;
   category: string;
   imageUrl: string | null;
-  portion: number;
+  grams: number;
+  calorie: number;
+  ingredients?: string[];
+  seasonings?: string[];
+};
+
+export type MealCandidate = {
+  style: string;
+  dishes: MealDish[];
+  nutrition: NutritionSummary;
+  goal?: string | null;
+  genre?: string | null;
+};
+
+export type MealResult = {
+  id: string | null;
+  relaxed: boolean;
+  candidates: MealCandidate[];
+  sample?: boolean;
 };
 
 export type MealSample = {
+  id?: string | null;
   goal: Goal;
+  genre?: string | null;
   title: string;
-  recipes: MealRecipe[];
+  dishes: MealDish[];
   nutrition: NutritionSummary | null;
+};
+
+export type MealContext = {
+  goal: string;
+  style: string;
+  genre: string | null;
+  requiredName: string | null;
+  ownedNames: string[];
 };

@@ -1,11 +1,13 @@
 import { Link } from 'react-router';
 import ArrowIcon from '@/components/ui/ArrowIcon';
 import { paths } from '@/config/paths';
+import { saveSampleResult } from '@/features/meal/lib/sampleResult';
 import type { MealSample } from '@/features/meal/types/meal';
+import { percent } from '@/features/meal/lib/format';
 
 // 랜덤 식단 카드
 
-const CATEGORY_ORDER = ['밥', '일품', '국&찌개', '반찬'];
+const CATEGORY_ORDER = ['일품', '밥', '국', '메인 반찬', '곁들임 반찬', '김치와 절임', '후식'];
 
 function rank(category: string): number {
   const index = CATEGORY_ORDER.indexOf(category);
@@ -14,23 +16,19 @@ function rank(category: string): number {
 }
 
 function sortedNames(sample: MealSample): string {
-  return sample.recipes
-    .map((recipe, order) => ({ recipe, order }))
-    .sort((a, b) => rank(a.recipe.category) - rank(b.recipe.category) || a.order - b.order)
-    .map(({ recipe }) => recipe.name)
-    .join(' / ');
-}
-
-function percent(value: number | null | undefined): string {
-  return value == null ? '-' : `${Math.round(value)}%`;
+  return sample.dishes
+    .map((dish, order) => ({ dish, order }))
+    .sort((a, b) => rank(a.dish.category) - rank(b.dish.category) || a.order - b.order)
+    .map(({ dish }) => dish.name)
+    .join(', ');
 }
 
 const styles = {
   featured: {
     frame:
-      'relative row-span-2 flex flex-col border border-line bg-white max-[860px]:row-auto max-[860px]:grid max-[860px]:grid-cols-[40%_1fr] max-[860px]:grid-rows-[1fr_auto] max-[860px]:gap-x-[18px] max-[860px]:p-3.5',
+      'relative row-span-2 flex flex-col border border-line bg-white max-[860px]:row-auto max-[860px]:grid max-[860px]:grid-cols-[clamp(110px,40%,170px)_minmax(0,1fr)] max-[860px]:grid-rows-[1fr_auto] max-[860px]:gap-x-[18px] max-[860px]:p-3.5 max-[360px]:grid-cols-1 max-[360px]:grid-rows-none',
     image:
-      'min-h-0 w-full flex-1 object-cover max-[860px]:row-span-2 max-[860px]:aspect-square max-[860px]:flex-none max-[860px]:self-center',
+      'min-h-0 w-full flex-1 object-cover max-[860px]:row-span-2 max-[860px]:aspect-square max-[860px]:flex-none max-[860px]:self-center max-[360px]:row-span-1',
     text: 'absolute bottom-[74px] left-0 max-w-[78%] bg-white pt-[18px] pr-7 pb-4 pl-[22px] max-[860px]:static max-[860px]:max-w-none max-[860px]:bg-transparent max-[860px]:p-0',
     heading:
       'mb-1.5 font-heading text-[clamp(20px,2vw,28px)] font-extrabold tracking-[-0.03em] max-[860px]:text-[17px] max-[860px]:font-bold max-[860px]:tracking-[-0.03em]',
@@ -40,8 +38,8 @@ const styles = {
   },
   normal: {
     frame:
-      'grid grid-cols-[40%_1fr] grid-rows-[1fr_auto] gap-x-[18px] border border-line bg-white p-3.5',
-    image: 'row-span-2 aspect-square w-full self-center object-cover',
+      'relative grid grid-cols-[clamp(110px,40%,170px)_minmax(0,1fr)] grid-rows-[1fr_auto] gap-x-[18px] border border-line bg-white p-3.5 max-[360px]:grid-cols-1 max-[360px]:grid-rows-none',
+    image: 'row-span-2 aspect-square w-full self-center object-cover max-[360px]:row-span-1',
     text: '',
     heading: 'mb-1.5 font-heading text-[17px] font-bold tracking-[-0.03em]',
     names: 'text-xs leading-[1.6] text-sub',
@@ -52,7 +50,7 @@ const styles = {
 type Props = { sample: MealSample; featured?: boolean };
 
 export default function SampleMealCard({ sample, featured = false }: Props) {
-  const photo = sample.recipes.find((recipe) => recipe.imageUrl)?.imageUrl ?? null;
+  const photo = sample.dishes.find((dish) => dish.imageUrl)?.imageUrl ?? null;
   const nutrition = sample.nutrition;
 
   const style = styles[featured ? 'featured' : 'normal'];
@@ -60,11 +58,15 @@ export default function SampleMealCard({ sample, featured = false }: Props) {
   return (
     <article className={`min-w-0 ${style.frame}`}>
       {photo ? (
-        <img src={photo} alt={sample.recipes[0]?.name ?? sample.title} className={style.image} />
+        <img
+          src={photo}
+          alt={sample.dishes.find((dish) => dish.imageUrl)?.name ?? sample.title}
+          className={style.image}
+        />
       ) : (
         <div className={`${style.image} bg-track`} />
       )}
-      <div className={style.text}>
+      <div className={`min-w-0 [overflow-wrap:anywhere] ${style.text}`}>
         <span className="mb-2.5 inline-block rounded-[3px] bg-green px-2.5 py-[3px] text-[11px] font-bold text-white">
           {sample.goal}
         </span>
@@ -80,11 +82,12 @@ export default function SampleMealCard({ sample, featured = false }: Props) {
         <span>단 {percent(nutrition?.proteinRatio)}</span>
         <span>지 {percent(nutrition?.fatRatio)}</span>
         <Link
-          to={paths.mealList}
+          to={paths.mealDetail.replace(':index', '0')}
+          onClick={() => saveSampleResult(sample)}
           aria-label={`${sample.title} 보기`}
-          className="group/arrow ml-auto self-center text-green"
+          className="ml-auto flex self-center text-green after:absolute after:inset-0"
         >
-          <ArrowIcon className="size-[18px] transition-transform duration-200 group-hover/arrow:translate-x-1" />
+          <ArrowIcon className="size-[18px]" />
         </Link>
       </div>
     </article>

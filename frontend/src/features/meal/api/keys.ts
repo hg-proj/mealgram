@@ -3,4 +3,5 @@
 export const mealKeys = {
   all: ['meals'] as const,
   samples: () => [...mealKeys.all, 'samples'] as const,
+  catalog: () => ['ingredients', 'catalog'] as const,
 };
