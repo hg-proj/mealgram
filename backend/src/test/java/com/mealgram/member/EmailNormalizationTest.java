@@ -26,6 +26,7 @@ import com.mealgram.common.security.LoginAttemptStore;
 import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
+import com.mealgram.common.security.SignupVerificationStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
 import com.mealgram.member.dto.SignupRequest;
 
@@ -44,9 +45,11 @@ class EmailNormalizationTest {
         passwordResetTokenStore = mock(PasswordResetTokenStore.class);
         passwordResetCodeStore = mock(PasswordResetCodeStore.class);
         passwordResetMailer = mock(PasswordResetMailer.class);
+        SignupVerificationStore signupVerificationStore = mock(SignupVerificationStore.class);
+        when(signupVerificationStore.isVerified(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         authService = new AuthService(memberRepository, mock(PasswordEncoder.class), mock(JwtTokenProvider.class),
                 mock(RefreshTokenStore.class), passwordResetTokenStore, passwordResetCodeStore, passwordResetMailer,
-                mock(LoginAttemptStore.class));
+                mock(LoginAttemptStore.class), signupVerificationStore);
 
     }
 

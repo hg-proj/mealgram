@@ -80,7 +80,6 @@ public class Member {
 
     }
 
-    // 만 나이, 생년월일이 없으면 null
     public Integer ageOn(LocalDate today) {
 
         return birthDate == null ? null : Period.between(birthDate, today).getYears();

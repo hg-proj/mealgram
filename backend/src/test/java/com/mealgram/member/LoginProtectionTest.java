@@ -24,6 +24,7 @@ import com.mealgram.common.security.LoginAttemptStore;
 import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
+import com.mealgram.common.security.SignupVerificationStore;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
 
@@ -46,7 +47,7 @@ class LoginProtectionTest {
         when(provider.generateRefreshToken(1L)).thenReturn("refresh");
         authService = new AuthService(memberRepository, passwordEncoder, provider, mock(RefreshTokenStore.class),
                 mock(PasswordResetTokenStore.class), mock(PasswordResetCodeStore.class), mock(PasswordResetMailer.class),
-                loginAttemptStore);
+                loginAttemptStore, mock(SignupVerificationStore.class));
 
     }
 

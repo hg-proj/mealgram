@@ -49,6 +49,7 @@ public record SignupRequest (
 
     @NotBlank
     @Email
+    @Size(max=255)
     String email
 
 ) {}

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-// 비밀번호 규칙 검증 어노테이션(8~20자, 영문과 숫자와 특수문자 3종류 이상은 8자부터, 2종류는 10자 이상)
+// 비밀번호 규칙 검증 어노테이션
 
 @Documented
 @Constraint(validatedBy = PasswordValidator.class)

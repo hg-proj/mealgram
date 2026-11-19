@@ -1,7 +1,5 @@
 # mealgram API 명세
 
-Swagger UI: `/swagger-ui.html`, OpenAPI 문서: `/v3/api-docs`
-
 ## 화면 목록
 
 **필수**
@@ -40,7 +38,9 @@ Swagger UI: `/swagger-ui.html`, OpenAPI 문서: `/v3/api-docs`
 | 메서드 | 엔드포인트 | 설명 | 요청 | 요청 위치 | 응답 |
 | --- | --- | --- | --- | --- | --- |
 | POST | /api/auth/login | 로그인 | loginId<br>password | body | 200<br>accessToken<br>refreshToken |
-| POST | /api/auth/signup | 회원가입 | nickname*<br>loginId*<br>password*<br>email*<br>birthDate (yyyy-MM-dd, 만 3세 이상 120세 이하)<br>gender<br>height<br>weight<br>activityLevel (신체활동계수) | body | 201<br>id |
+| POST | /api/auth/signup/send-code | 회원가입 이메일 인증번호 발송, 숫자 6자리, 10분 유효, 같은 이메일은 60초 간격, 이미 가입된 이메일은 409, 메일을 보내지 못하면 502 | email*<br>nickname 메일 인사말에만 씀 | body | 200 |
+| POST | /api/auth/signup/verify-code | 회원가입 인증번호 확인, 이메일별 5번 틀리면 10분 동안 429, 인증은 30분 동안 유효 | email*<br>code* (숫자 6자리) | body | 200 |
+| POST | /api/auth/signup | 회원가입, 인증번호 확인을 마친 이메일만 가능하고 아니면 400 EMAIL_NOT_VERIFIED, 가입하면 인증 기록을 지움 | nickname*<br>loginId*<br>password*<br>email*<br>birthDate (yyyy-MM-dd, 만 3세 이상 120세 이하)<br>gender<br>height<br>weight<br>activityLevel (신체활동계수) | body | 201<br>id |
 | POST | /api/auth/forgot-password | 비밀번호 재설정 인증번호 메일 발송, 숫자 6자리, 10분 유효, 같은 회원은 60초 간격, 가입되지 않은 이메일은 404, 메일을 보내지 못하면 502 | email* | body | 200 |
 | POST | /api/auth/verify-reset-code | 인증번호 확인, 이메일별 5번 틀리면 10분 동안 429 | email*<br>code* (숫자 6자리) | body | 200<br>resetToken (10분 유효) |
 | POST | /api/auth/reset-password | 새 비밀번호로 변경, 인증번호 확인으로 받은 resetToken은 한 번만 사용 | token* (resetToken)<br>newPassword* | body | 200 |

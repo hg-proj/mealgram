@@ -15,6 +15,7 @@ import com.mealgram.common.security.LoginAttemptStore;
 import com.mealgram.common.security.PasswordResetCodeStore;
 import com.mealgram.common.security.PasswordResetTokenStore;
 import com.mealgram.common.security.RefreshTokenStore;
+import com.mealgram.common.security.SignupVerificationStore;
 import com.mealgram.member.dto.ForgotPasswordRequest;
 import com.mealgram.member.dto.LoginRequest;
 import com.mealgram.member.dto.LoginResponse;
@@ -22,6 +23,8 @@ import com.mealgram.member.dto.LogoutRequest;
 import com.mealgram.member.dto.RefreshRequest;
 import com.mealgram.member.dto.RefreshResponse;
 import com.mealgram.member.dto.ResetPasswordRequest;
+import com.mealgram.member.dto.SignupCodeRequest;
+import com.mealgram.member.dto.SignupCodeVerifyRequest;
 import com.mealgram.member.dto.SignupRequest;
 import com.mealgram.member.dto.SignupResponse;
 import com.mealgram.member.dto.VerifyResetCodeRequest;
@@ -40,6 +43,7 @@ public class AuthService {
     private final PasswordResetCodeStore passwordResetCodeStore;
     private final PasswordResetMailer passwordResetMailer;
     private final LoginAttemptStore loginAttemptStore;
+    private final SignupVerificationStore signupVerificationStore;
     private final String dummyHash;
 
     private static final String DUMMY_PASSWORD = "mealgram-dummy-password";
@@ -50,7 +54,8 @@ public class AuthService {
     public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider, RefreshTokenStore refreshTokenStore,
                        PasswordResetTokenStore passwordResetTokenStore, PasswordResetCodeStore passwordResetCodeStore,
-                       PasswordResetMailer passwordResetMailer, LoginAttemptStore loginAttemptStore) {
+                       PasswordResetMailer passwordResetMailer, LoginAttemptStore loginAttemptStore,
+                       SignupVerificationStore signupVerificationStore) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
@@ -59,6 +64,7 @@ public class AuthService {
         this.passwordResetCodeStore = passwordResetCodeStore;
         this.passwordResetMailer = passwordResetMailer;
         this.loginAttemptStore = loginAttemptStore;
+        this.signupVerificationStore = signupVerificationStore;
         this.dummyHash = passwordEncoder.encode(DUMMY_PASSWORD);
     }
 
@@ -72,6 +78,10 @@ public class AuthService {
 
         if (memberRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        if (!signupVerificationStore.isVerified(email)) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -89,8 +99,53 @@ public class AuthService {
                 .build();
 
         memberRepository.save(member);
+        signupVerificationStore.clear(email);
 
         return new SignupResponse(member.getId());
+    }
+
+    public void sendSignupCode(SignupCodeRequest request) {
+
+        String email = normalizeEmail(request.email());
+
+        if (memberRepository.existsByEmail(email)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        if (!signupVerificationStore.acquireCooldown(email)) {
+            return;
+        }
+
+        String code = generateResetCode();
+        signupVerificationStore.saveCode(email, code);
+
+        try {
+            passwordResetMailer.sendSignupCode(email, request.nickname(), code);
+        } catch (BusinessException e) {
+            signupVerificationStore.deleteCode(email);
+            signupVerificationStore.releaseCooldown(email);
+
+            throw e;
+        }
+
+    }
+
+    public void verifySignupCode(SignupCodeVerifyRequest request) {
+
+        String email = normalizeEmail(request.email());
+
+        if (signupVerificationStore.isBlocked(email)) {
+            throw new BusinessException(ErrorCode.SIGNUP_CODE_BLOCKED);
+        }
+
+        if (!signupVerificationStore.consumeCode(email, request.code())) {
+            signupVerificationStore.recordFailure(email);
+            throw new BusinessException(ErrorCode.INVALID_SIGNUP_CODE);
+        }
+
+        signupVerificationStore.resetFailures(email);
+        signupVerificationStore.markVerified(email);
+
     }
 
     public LoginResponse login(LoginRequest request) {
