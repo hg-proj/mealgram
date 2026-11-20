@@ -24,6 +24,10 @@ export const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('@/routes/ForgotPassword')).default }),
       },
       {
+        path: paths.ingredient,
+        lazy: async () => ({ Component: (await import('@/routes/Recommend')).default }),
+      },
+      {
         path: paths.about,
         lazy: async () => ({ Component: (await import('@/routes/About')).default }),
       },

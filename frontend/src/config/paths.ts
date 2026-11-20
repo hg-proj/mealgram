@@ -10,5 +10,6 @@ export const paths = {
   privacy: '/privacy',
   ingredient: '/ingredients',
   mealList: '/meals',
+  mealDetail: '/meals/:index',
   myPage: '/mypage',
 } as const;

@@ -1,8 +1,6 @@
 import Dropdown from '@/components/ui/Dropdown';
 import { Field } from '@/components/ui/TextField';
 
-// 생년월일 선택, 연 월 일 드롭다운
-
 type Part = 'birthYear' | 'birthMonth' | 'birthDay';
 
 type Props = {
@@ -10,6 +8,8 @@ type Props = {
   month: string;
   day: string;
   error?: string;
+  bare?: boolean;
+  heightClass?: string;
   onChange: (part: Part, value: string) => void;
 };
 
@@ -18,7 +18,15 @@ const MAX_AGE = 120;
 const range = (from: number, to: number) =>
   Array.from({ length: Math.abs(to - from) + 1 }, (_, i) => (from <= to ? from + i : from - i));
 
-export default function BirthDateField({ year, month, day, error, onChange }: Props) {
+export default function BirthDateField({
+  year,
+  month,
+  day,
+  error,
+  bare = false,
+  heightClass,
+  onChange,
+}: Props) {
   const thisYear = new Date().getFullYear();
   const years = range(thisYear, thisYear - MAX_AGE).map((y) => ({
     value: String(y),
@@ -41,6 +49,45 @@ export default function BirthDateField({ year, month, day, error, onChange }: Pr
     }
   };
 
+  const picks = (
+    <div className="grid grid-cols-3 gap-2">
+      <Dropdown
+        id="birthYear"
+        ariaLabel="출생 연도"
+        value={year}
+        options={years}
+        placeholder="년"
+        onChange={(value) => change('birthYear', value)}
+        invalid={Boolean(error)}
+        heightClass={heightClass}
+      />
+      <Dropdown
+        id="birthMonth"
+        ariaLabel="출생 월"
+        value={month}
+        options={months}
+        placeholder="월"
+        onChange={(value) => change('birthMonth', value)}
+        invalid={Boolean(error)}
+        heightClass={heightClass}
+      />
+      <Dropdown
+        id="birthDay"
+        ariaLabel="출생 일"
+        value={day}
+        options={days}
+        placeholder="일"
+        onChange={(value) => onChange('birthDay', value)}
+        invalid={Boolean(error)}
+        heightClass={heightClass}
+      />
+    </div>
+  );
+
+  if (bare) {
+    return picks;
+  }
+
   return (
     <Field id="birthYear" label="생년월일" error={error}>
       <div className="grid grid-cols-3 gap-2">
@@ -52,6 +99,7 @@ export default function BirthDateField({ year, month, day, error, onChange }: Pr
           placeholder="년"
           onChange={(value) => change('birthYear', value)}
           invalid={Boolean(error)}
+          heightClass={heightClass}
         />
         <Dropdown
           id="birthMonth"
@@ -61,6 +109,7 @@ export default function BirthDateField({ year, month, day, error, onChange }: Pr
           placeholder="월"
           onChange={(value) => change('birthMonth', value)}
           invalid={Boolean(error)}
+          heightClass={heightClass}
         />
         <Dropdown
           id="birthDay"
@@ -70,6 +119,7 @@ export default function BirthDateField({ year, month, day, error, onChange }: Pr
           placeholder="일"
           onChange={(value) => onChange('birthDay', value)}
           invalid={Boolean(error)}
+          heightClass={heightClass}
         />
       </div>
     </Field>

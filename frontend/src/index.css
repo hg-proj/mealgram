@@ -13,6 +13,7 @@
   --color-mist: #e9eee7;
   --color-track: #e7ebe6;
   --color-danger: #c0392b;
+  --color-disabled: #9aa39d;
   --shadow-plate: 0 18px 40px rgb(0 0 0 / 0.18);
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
@@ -26,6 +27,8 @@
 @layer base {
   html {
     word-break: keep-all;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -35,6 +38,11 @@
     font-family: var(--font-sans);
     font-size: 14px;
     line-height: 1.5;
+  }
+
+  ::selection {
+    background: var(--color-green-soft);
+    color: var(--color-ink);
   }
 
   ul,
@@ -49,5 +57,15 @@
   h3,
   p {
     margin: 0;
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    rotate: -3deg;
+  }
+  50% {
+    rotate: 3deg;
   }
 }
