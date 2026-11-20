@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import HeroSplit from '@/features/home/components/HeroSplit';
 
 describe('HeroSplit', () => {
-  it('두 면이 각각 알맞은 주소로 연결된다.', () => {
+  it('내 재료 면은 재료 입력으로 연결되고 빠르게 면은 버튼이다.', () => {
     render(
       <MemoryRouter>
         <HeroSplit />
@@ -12,7 +12,7 @@ describe('HeroSplit', () => {
     );
 
     expect(screen.getByRole('link', { name: /내 재료로/ })).toHaveAttribute('href', '/ingredients');
-    expect(screen.getByRole('link', { name: /빠르게/ })).toHaveAttribute('href', '/meals');
+    expect(screen.getByRole('button', { name: /빠르게/ })).toBeInTheDocument();
   });
 
   it('두 면에 서로 다른 접시 사진을 보여준다.', () => {

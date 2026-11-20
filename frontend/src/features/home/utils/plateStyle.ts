@@ -1,8 +1,6 @@
 import type { CSSProperties } from 'react';
 import { heroPlates, PLATE_IMAGE_SIZE } from '@/features/home/data/heroPlates';
 
-// 접시 안쪽만 보이게 자르는 배경 설정
-
 const FIT = 0.95;
 
 export function plateStyle(id: number): CSSProperties {

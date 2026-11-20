@@ -4,6 +4,7 @@ import ArrowIcon from '@/components/ui/ArrowIcon';
 import { paths } from '@/config/paths';
 import { heroPlates } from '@/features/home/data/heroPlates';
 import { plateStyle } from '@/features/home/utils/plateStyle';
+import QuickRecommendDialog from '@/features/meal/components/QuickRecommendDialog';
 
 // 메인 첫 화면 두 면
 
@@ -20,13 +21,14 @@ function pickTwo(): [number, number] {
 }
 
 const panel =
-  'relative flex min-w-0 grow shrink basis-1/2 flex-col justify-end overflow-hidden px-[clamp(24px,5vw,80px)] py-9 transition-[flex-basis] duration-[450ms] ease-[cubic-bezier(.3,.7,.2,1)] group-hover/split:basis-[42%] hover:basis-[58%]! max-[760px]:min-h-[340px] max-[760px]:basis-auto max-[760px]:group-hover/split:basis-auto max-[760px]:hover:basis-auto!';
+  'relative flex min-w-0 grow shrink basis-1/2 flex-col justify-end overflow-hidden [contain:paint] px-[clamp(24px,5vw,80px)] py-9 transition-[flex-basis] duration-[450ms] ease-[cubic-bezier(.3,.7,.2,1)] group-hover/split:basis-[42%] hover:basis-[58%]! max-[760px]:min-h-[340px] max-[760px]:basis-auto max-[760px]:group-hover/split:basis-auto max-[760px]:hover:basis-auto!';
 const plate = 'pointer-events-none absolute aspect-square w-[min(62%,520px)] rounded-full bg-white';
 const title =
   'relative z-10 font-heading text-[clamp(40px,5.2vw,76px)] leading-[1.04] font-extrabold tracking-[-0.04em]';
 
 export default function HeroSplit() {
   const [firstId, secondId] = useState(pickTwo)[0];
+  const [quickOpen, setQuickOpen] = useState(false);
 
   return (
     <section className="group/split flex h-[clamp(440px,40vw,560px)] overflow-hidden max-[760px]:h-auto max-[760px]:flex-col">
@@ -45,9 +47,13 @@ export default function HeroSplit() {
           <br />
           추천받기
         </span>
-        <ArrowIcon className="relative z-10 mt-[26px] size-[30px] transition-transform duration-200 group-hover/panel:translate-x-1.5" />
+        <ArrowIcon className="relative z-10 mt-[26px] size-[30px]" />
       </Link>
-      <Link to={paths.mealList} className={`${panel} group/panel bg-mist text-ink`}>
+      <button
+        type="button"
+        onClick={() => setQuickOpen(true)}
+        className={`${panel} group/panel bg-mist text-left text-ink`}
+      >
         <div
           role="img"
           aria-label="추천 요리 사진"
@@ -59,8 +65,9 @@ export default function HeroSplit() {
           <br />
           추천받기
         </span>
-        <ArrowIcon className="relative z-10 mt-[26px] size-[30px] transition-transform duration-200 group-hover/panel:translate-x-1.5" />
-      </Link>
+        <ArrowIcon className="relative z-10 mt-[26px] size-[30px]" />
+      </button>
+      {quickOpen && <QuickRecommendDialog onClose={() => setQuickOpen(false)} />}
     </section>
   );
 }
