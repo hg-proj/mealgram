@@ -1,4 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import chevronIcon from '@/assets/chevron.svg';
+import MaskIcon from '@/components/ui/MaskIcon';
 
 // 설명이 붙는 선택 목록
 
@@ -12,6 +14,7 @@ type Props = {
   onChange: (value: string) => void;
   invalid?: boolean;
   ariaLabel?: string;
+  heightClass?: string;
 };
 
 export default function Dropdown({
@@ -22,6 +25,7 @@ export default function Dropdown({
   onChange,
   invalid,
   ariaLabel,
+  heightClass = 'h-[56px]',
 }: Props) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -86,18 +90,15 @@ export default function Dropdown({
         aria-label={ariaLabel}
         aria-invalid={invalid ? true : undefined}
         onClick={toggle}
-        className={`flex h-[56px] w-full items-center justify-between border bg-white px-3.5 text-[15px] select-none ${
+        className={`flex ${heightClass} w-full items-center justify-between border bg-white px-3.5 text-[15px] select-none ${
           open ? 'rounded-t-[3px]' : 'rounded-[3px]'
         } ${invalid ? 'border-danger' : open ? 'border-green' : 'border-rule'} ${selected ? 'text-ink' : 'text-sub'}`}
       >
         <span>{selected ? selected.label : placeholder}</span>
-        <svg
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          className={`size-3.5 fill-none stroke-2 transition-transform ${open ? 'rotate-180 stroke-green' : 'stroke-sub'}`}
-        >
-          <path d="M5 9l7 7 7-7" />
-        </svg>
+        <MaskIcon
+          src={chevronIcon}
+          className={`size-3.5 transition-transform ${open ? 'rotate-180 text-green' : 'text-sub'}`}
+        />
       </button>
       {open && (
         <ul

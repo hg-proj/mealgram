@@ -2,34 +2,24 @@ import type { FieldPath, UseFormRegister } from 'react-hook-form';
 import Dropdown from '@/components/ui/Dropdown';
 import TextField, { Field } from '@/components/ui/TextField';
 import BirthDateField from '@/features/auth/components/BirthDateField';
-import type { SignupInput } from '@/features/auth/schemas/signupSchema';
+import GenderButtons from '@/features/auth/components/GenderButtons';
+import { activityOptions } from '@/features/meal/data/options';
+import type { BodyInfoInput } from '@/features/meal/schemas/bodyInfoSchema';
 
-// 회원가입 2단계, 선택 입력인 신체 정보
+// 신체 정보 입력칸, 회원가입과 식단 추천에서 함께 사용
 
 type Props = {
-  register: UseFormRegister<SignupInput>;
-  errorOf: (field: FieldPath<SignupInput>) => string | undefined;
-  gender: SignupInput['gender'];
-  activityLevel: SignupInput['activityLevel'];
+  register: UseFormRegister<BodyInfoInput>;
+  errorOf: (field: FieldPath<BodyInfoInput>) => string | undefined;
+  gender: BodyInfoInput['gender'];
+  activityLevel: BodyInfoInput['activityLevel'];
   birthYear: string;
   birthMonth: string;
   birthDay: string;
-  onGender: (gender: SignupInput['gender']) => void;
-  onActivity: (activityLevel: SignupInput['activityLevel']) => void;
+  onGender: (gender: BodyInfoInput['gender']) => void;
+  onActivity: (activityLevel: BodyInfoInput['activityLevel']) => void;
   onBirth: (part: 'birthYear' | 'birthMonth' | 'birthDay', value: string) => void;
 };
-
-const activityOptions = [
-  { value: 'LOW', label: '비활동적', description: '주로 앉아서 생활' },
-  { value: 'LIGHT', label: '저활동적', description: '일상적인 걷기 정도' },
-  { value: 'MODERATE', label: '활동적', description: '주 3~5회 운동' },
-  { value: 'HIGH', label: '매우 활동적', description: '거의 매일 운동하거나 육체노동' },
-];
-
-const genders = [
-  { value: 'MALE', label: '남자' },
-  { value: 'FEMALE', label: '여자' },
-] as const;
 
 export default function BodyInfoFields({
   register,
@@ -51,25 +41,13 @@ export default function BodyInfoFields({
           value={activityLevel}
           options={activityOptions}
           placeholder="활동량 선택"
-          onChange={(value) => onActivity(value as SignupInput['activityLevel'])}
+          onChange={(value) => onActivity(value as BodyInfoInput['activityLevel'])}
           invalid={Boolean(errorOf('activityLevel'))}
         />
       </Field>
       <div className="mb-3.5">
         <span className="mb-1.5 block text-[13px] font-semibold">성별</span>
-        <div className="grid grid-cols-2 gap-2">
-          {genders.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={gender === option.value}
-              onClick={() => onGender(gender === option.value ? '' : option.value)}
-              className={`h-14 rounded-[3px] border ${gender === option.value ? 'border-green bg-green-soft font-semibold text-green-d' : 'border-rule text-sub'}`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <GenderButtons value={gender} onChange={onGender} />
       </div>
       <BirthDateField
         year={birthYear}
