@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { paths } from '@/config/paths';
 import Layout from '@/components/layout/Layout';
+import RequireLogin from '@/features/auth/components/RequireLogin';
 import ErrorPage from '@/routes/ErrorPage';
 import Main from '@/routes/Main';
 
@@ -34,6 +35,19 @@ export const router = createBrowserRouter([
       {
         path: paths.mealDetail,
         lazy: async () => ({ Component: (await import('@/routes/MealDetail')).default }),
+      },
+      {
+        element: <RequireLogin />,
+        children: [
+          {
+            path: paths.myMeals,
+            lazy: async () => ({ Component: (await import('@/routes/MyMeals')).default }),
+          },
+          {
+            path: paths.myMealDetail,
+            lazy: async () => ({ Component: (await import('@/routes/MyMealDetail')).default }),
+          },
+        ],
       },
       {
         path: paths.about,
