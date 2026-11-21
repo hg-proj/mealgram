@@ -11,5 +11,7 @@ export const paths = {
   ingredient: '/ingredients',
   mealList: '/meals',
   mealDetail: '/meals/:index',
+  myMeals: '/my-meals',
+  myMealDetail: '/my-meals/:id',
   myPage: '/mypage',
 } as const;

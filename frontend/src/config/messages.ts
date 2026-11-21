@@ -9,6 +9,8 @@ export const messages = {
   saveMealFailed: '식단을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   recommendFailed: '식단을 추천받지 못했습니다. 잠시 후 다시 시도해 주세요.',
   catalogFailed: '재료 목록을 불러오지 못했습니다.',
+  savedMealsFailed: '저장한 식단을 불러오지 못했습니다.',
+  deleteMealFailed: '식단을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   resetFailed: '비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   notice: {
     requiredOnly: '필수 재료는 1개만 담을 수 있습니다.',
@@ -23,6 +25,9 @@ export const messages = {
     quickLoginForBody: '로그인하면 신체정보로 추천받을 수 있습니다.',
     quickNoBody: '저장된 신체정보가 없습니다.',
     quickMaking: '식단을 만드는 중입니다.',
+    noSavedMeals: '아직 담은 식단이 없습니다.',
+    noSearchResult: '검색 결과가 없습니다.',
+    savedMealNotFound: '저장한 식단을 찾을 수 없습니다.',
   },
   validation: {
     loginIdRequired: '아이디를 입력해 주세요.',
