@@ -5,6 +5,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import { messages } from '@/config/messages';
 import { paths } from '@/config/paths';
 import MealDetailPanel from '@/features/meal/components/MealDetailPanel';
+import ShoppingBox from '@/features/meal/components/ShoppingBox';
 import { contextBadge } from '@/features/meal/lib/contextBadge';
 import { useSavedMeals } from '@/features/savedMeal/api/useSavedMeals';
 import DeleteMealDialog from '@/features/savedMeal/components/DeleteMealDialog';
@@ -41,6 +42,11 @@ export default function MyMealDetail() {
                   삭제
                 </button>
               }
+            />
+            <ShoppingBox
+              dishes={meal.dishes}
+              requiredName={meal.context?.requiredName ?? null}
+              ownedNames={meal.context?.ownedNames ?? []}
             />
           </>
         )}

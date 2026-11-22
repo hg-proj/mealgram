@@ -5,6 +5,7 @@ import MealDetailPanel from '@/features/meal/components/MealDetailPanel';
 import DetailNotice from '@/features/meal/components/DetailNotice';
 import NoMealNotice from '@/features/meal/components/NoMealNotice';
 import SaveMealButton from '@/features/meal/components/SaveMealButton';
+import ShoppingBox from '@/features/meal/components/ShoppingBox';
 import { contextBadge } from '@/features/meal/lib/contextBadge';
 import { resultStore } from '@/features/meal/lib/resultStore';
 
@@ -34,6 +35,11 @@ export default function MealDetail() {
               genre={candidate.genre}
             />
           }
+        />
+        <ShoppingBox
+          dishes={candidate.dishes}
+          requiredName={context?.requiredName ?? null}
+          ownedNames={context?.ownedNames ?? []}
         />
         <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-baseline gap-x-4 text-[13px] text-sub max-[620px]:grid-cols-1 max-[620px]:gap-y-2 max-[620px]:text-center">
           <Link
