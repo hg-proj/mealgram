@@ -48,6 +48,7 @@ export const messages = {
     passwordMismatch: '비밀번호가 일치하지 않습니다.',
     emailRequired: '이메일을 입력해 주세요.',
     email: '이메일 형식이 올바르지 않습니다.',
+    emailNotVerified: '이메일 인증을 완료해 주세요.',
     resetCodeRequired: '인증번호를 입력해 주세요.',
     resetCode: '인증번호 6자리를 입력해 주세요.',
     agreeTerms: '이용약관에 동의해 주세요.',
