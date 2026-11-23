@@ -1,12 +1,8 @@
-import { useState } from 'react';
 import { Link } from 'react-router';
 import { paths } from '@/config/paths';
-import { heroPlates } from '@/features/home/data/heroPlates';
-import { plateStyle } from '@/features/home/utils/plateStyle';
+import PlateImage from '@/features/home/components/PlateImage';
 
 // 에러 화면
-
-const plateIds = Object.keys(heroPlates).map(Number);
 
 const texts: Record<number, { eyebrow: string; title: string; description: string }> = {
   404: {
@@ -28,7 +24,6 @@ const fallback = {
 };
 
 export default function ErrorPage({ status }: { status: number }) {
-  const [plateId] = useState(() => plateIds[Math.floor(Math.random() * plateIds.length)]);
   const text = texts[status] ?? fallback;
   const digits = String(status).padStart(3, '0');
 
@@ -40,11 +35,7 @@ export default function ErrorPage({ status }: { status: number }) {
         aria-label={String(status)}
       >
         <span aria-hidden="true">{digits[0]}</span>
-        <span
-          aria-hidden="true"
-          className="size-[0.78em] rounded-full bg-white shadow-plate"
-          style={plateStyle(plateId)}
-        />
+        <PlateImage className="size-[0.78em]" />
         <span aria-hidden="true">{digits[2]}</span>
       </div>
       <h1 className="mt-[18px] font-heading text-[clamp(24px,2.6vw,34px)] leading-[1.1] font-extrabold tracking-[-0.04em]">
