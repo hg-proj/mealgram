@@ -43,7 +43,7 @@ export default function TermsAgreement({ register, allChecked, onToggleAll, erro
               {item.label} <span className="text-danger">(필수)</span>
             </span>
           </label>
-          <Link to={item.to} className="text-xs text-sub underline">
+          <Link to={item.to} target="_blank" rel="noopener" className="text-xs text-sub underline">
             보기
           </Link>
         </div>

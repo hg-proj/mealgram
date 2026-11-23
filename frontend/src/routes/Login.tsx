@@ -7,10 +7,11 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function Login() {
   const { isLoggedIn } = useAuth();
-  const signedUp = (useLocation().state as { signedUp?: boolean } | null)?.signedUp;
+  const state = useLocation().state as { signedUp?: boolean; from?: string } | null;
+  const signedUp = state?.signedUp;
 
   if (isLoggedIn) {
-    return <Navigate to={paths.home} replace />;
+    return <Navigate to={state?.from ?? paths.home} replace />;
   }
 
   return (
