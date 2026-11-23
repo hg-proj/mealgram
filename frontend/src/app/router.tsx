@@ -47,6 +47,22 @@ export const router = createBrowserRouter([
             path: paths.myMealDetail,
             lazy: async () => ({ Component: (await import('@/routes/MyMealDetail')).default }),
           },
+          {
+            path: paths.myPage,
+            lazy: async () => ({ Component: (await import('@/routes/MyPage')).default }),
+            children: [
+              {
+                index: true,
+                lazy: async () => ({ Component: (await import('@/routes/MyProfile')).default }),
+              },
+              {
+                path: 'ingredients',
+                lazy: async () => ({
+                  Component: (await import('@/routes/MyIngredients')).default,
+                }),
+              },
+            ],
+          },
         ],
       },
       {

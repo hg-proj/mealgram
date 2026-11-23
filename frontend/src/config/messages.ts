@@ -11,6 +11,11 @@ export const messages = {
   catalogFailed: '재료 목록을 불러오지 못했습니다.',
   savedMealsFailed: '저장한 식단을 불러오지 못했습니다.',
   deleteMealFailed: '식단을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  profileFailed: '내 정보를 불러오지 못했습니다.',
+  profileSaveFailed: '내 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  withdrawFailed: '회원탈퇴하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  myIngredientsFailed: '내 재료를 불러오지 못했습니다.',
+  myIngredientsSaveFailed: '내 재료를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   resetFailed: '비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   notice: {
     requiredOnly: '필수 재료는 1개만 담을 수 있습니다.',
