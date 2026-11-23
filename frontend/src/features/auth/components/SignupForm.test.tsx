@@ -8,6 +8,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import SignupForm from '@/features/auth/components/SignupForm';
 
 let signupBody: unknown = null;
+let sendCodeBody: unknown = null;
 
 const server = setupServer(
   http.post('*/api/auth/signup', async ({ request }) => {
@@ -15,6 +16,12 @@ const server = setupServer(
 
     return HttpResponse.json({ id: 1 }, { status: 201 });
   }),
+  http.post('*/api/auth/signup/send-code', async ({ request }) => {
+    sendCodeBody = await request.json();
+
+    return new HttpResponse(null, { status: 200 });
+  }),
+  http.post('*/api/auth/signup/verify-code', () => new HttpResponse(null, { status: 200 })),
 );
 
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
@@ -22,6 +29,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 beforeEach(() => {
   signupBody = null;
+  sendCodeBody = null;
 });
 
 function renderForm() {
@@ -45,6 +53,14 @@ async function fillAccount(passwordConfirm = 'password1!') {
   await userEvent.type(screen.getByLabelText('비밀번호'), 'password1!');
   await userEvent.type(screen.getByLabelText('비밀번호 확인'), passwordConfirm);
   await userEvent.type(screen.getByLabelText('이메일'), 'tester@example.com');
+}
+
+// 이메일 인증번호를 받고 확인까지 마침
+async function verifyEmail() {
+  await userEvent.click(screen.getByRole('button', { name: '인증' }));
+  await userEvent.type(await screen.findByLabelText('인증번호'), '123456');
+  await userEvent.click(screen.getByRole('button', { name: '확인' }));
+  await screen.findByText('인증이 완료되었습니다.');
 }
 
 const agreeAll = () => userEvent.click(screen.getByRole('checkbox', { name: '전체 약관동의' }));
@@ -132,6 +148,7 @@ describe('SignupForm', () => {
     renderForm();
 
     await fillAccount();
+    await verifyEmail();
     await agreeAll();
     await press('가입');
 
@@ -148,6 +165,7 @@ describe('SignupForm', () => {
     renderForm();
 
     await fillAccount();
+    await verifyEmail();
     await agreeAll();
     await press('다음');
     await userEvent.click(screen.getByRole('button', { name: '활동량' }));
@@ -192,11 +210,99 @@ describe('SignupForm', () => {
     renderForm();
 
     await fillAccount();
+    await verifyEmail();
     await agreeAll();
     await press('다음');
     await press('가입');
 
     expect(await screen.findByText('이미 사용 중인 아이디입니다.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '다음' })).toBeInTheDocument();
+  });
+
+  it('이메일 인증을 마치지 않으면 다음으로 넘어가지 않고 이메일 칸에 알린다.', async () => {
+    renderForm();
+
+    await fillAccount();
+    await agreeAll();
+    await press('다음');
+
+    expect(await screen.findByText('이메일 인증을 완료해 주세요.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '이전' })).not.toBeInTheDocument();
+    expect(signupBody).toBeNull();
+  });
+
+  it('이미 가입된 이메일이면 인증번호를 받을 때 이메일 칸에 서버 문구를 보여준다.', async () => {
+    server.use(
+      http.post('*/api/auth/signup/send-code', () =>
+        HttpResponse.json(
+          {
+            success: false,
+            error: { code: 'DUPLICATE_EMAIL', message: '이미 사용 중인 이메일입니다.' },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    renderForm();
+
+    await fillAccount();
+    await press('인증');
+
+    expect(await screen.findByText('이미 사용 중인 이메일입니다.')).toBeInTheDocument();
+    expect(screen.getByLabelText('인증번호')).toBeDisabled();
+  });
+
+  it('인증번호가 틀리면 서버 문구를 보여주고 인증을 마치지 않는다.', async () => {
+    server.use(
+      http.post('*/api/auth/signup/verify-code', () =>
+        HttpResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'INVALID_SIGNUP_CODE',
+              message: '인증번호가 올바르지 않거나 만료되었습니다. 다시 확인해 주세요.',
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderForm();
+
+    await fillAccount();
+    await press('인증');
+    await userEvent.type(await screen.findByLabelText('인증번호'), '000000');
+    await press('확인');
+
+    expect(
+      await screen.findByText('인증번호가 올바르지 않거나 만료되었습니다. 다시 확인해 주세요.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('인증이 완료되었습니다.')).not.toBeInTheDocument();
+  });
+
+  it('인증을 마친 뒤 이메일을 고치면 다시 인증해야 한다.', async () => {
+    renderForm();
+
+    await fillAccount();
+    await verifyEmail();
+    await userEvent.type(screen.getByLabelText('이메일'), 'x');
+    await agreeAll();
+    await press('가입');
+
+    expect(await screen.findByText('이메일 인증을 완료해 주세요.')).toBeInTheDocument();
+    expect(screen.getByLabelText('인증번호')).toBeDisabled();
+    expect(signupBody).toBeNull();
+  });
+
+  it('인증번호를 받을 때 메일 인사말에 쓸 닉네임을 함께 보낸다.', async () => {
+    renderForm();
+
+    await fillAccount();
+    await press('인증');
+
+    expect(
+      await screen.findByText('인증번호가 전송되었습니다. 10분 안에 입력해 주세요.'),
+    ).toBeInTheDocument();
+    expect(sendCodeBody).toEqual({ email: 'tester@example.com', nickname: '테스터' });
   });
 });

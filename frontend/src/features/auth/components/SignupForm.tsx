@@ -1,13 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, type KeyboardEvent } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { useForm, useWatch, type FieldErrors, type FieldPath } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import TextField from '@/components/ui/TextField';
+import { inputStyle } from '@/components/ui/inputStyle';
 import { messages } from '@/config/messages';
 import { paths } from '@/config/paths';
 import { useSignup } from '@/features/auth/api/useSignup';
+import {
+  useRequestSignupCode,
+  useVerifySignupCode,
+} from '@/features/auth/api/useSignupVerification';
 import BodyInfoFields from '@/features/auth/components/BodyInfoFields';
+import EmailVerificationFields from '@/features/auth/components/EmailVerificationFields';
 import TermsAgreement from '@/features/auth/components/TermsAgreement';
+import { useEmailVerification } from '@/features/auth/hooks/useEmailVerification';
 import {
   signupDefaults,
   signupSchema,
@@ -45,6 +52,9 @@ export default function SignupForm() {
     register,
     handleSubmit,
     setError,
+    clearErrors,
+    getValues,
+    trigger,
     setValue,
     control,
     formState: { errors, touchedFields },
@@ -52,6 +62,15 @@ export default function SignupForm() {
     resolver: zodResolver(signupSchema),
     defaultValues: signupDefaults,
     mode: 'onTouched',
+  });
+
+  const requestCode = useRequestSignupCode();
+  const verifyCode = useVerifySignupCode();
+  const verification = useEmailVerification<void>({
+    send: (email) =>
+      requestCode.mutateAsync({ email, nickname: getValues('nickname').trim() || undefined }),
+    verify: (email, code) => verifyCode.mutateAsync({ email, code }),
+    emailErrorCodes: ['DUPLICATE_EMAIL'],
   });
 
   const [agreeTerms, agreePrivacy, gender, activityLevel, birthYear, birthMonth, birthDay] =
@@ -68,11 +87,42 @@ export default function SignupForm() {
       ],
     });
 
-  // 건드린 칸이나 제출 때 지목된 칸의 오류만, 그중 처음 하나만 보여줌
   const shownError = fieldOrder.find(
     (field) => errors[field] && (touchedFields[field] || flagged === field),
   );
   const errorOf = (field: Field) => (field === shownError ? errors[field]?.message : undefined);
+
+  useEffect(() => {
+    if (verification.phase === 'verified') {
+      clearErrors('email');
+    }
+  }, [verification.phase, clearErrors]);
+
+  const sendCode = async () => {
+    if (!(await trigger('email'))) {
+      setFlagged('email');
+
+      return;
+    }
+
+    await verification.sendCode(getValues('email'), (message) => {
+      setFlagged('email');
+      setError('email', { message });
+    });
+  };
+
+  const confirmCode = () => verification.confirmCode(getValues('email'));
+
+  const requireVerified = () => {
+    if (verification.phase === 'verified') {
+      return true;
+    }
+    setStep(1);
+    setFlagged('email');
+    setError('email', { message: messages.validation.emailNotVerified });
+
+    return false;
+  };
 
   const toggleAll = (checked: boolean) => {
     setValue('agreeTerms', checked, { shouldValidate: true });
@@ -96,6 +146,11 @@ export default function SignupForm() {
       setStep(1);
       setFlagged('loginId');
       setError('loginId', { message: body.message });
+    } else if (body?.code === 'EMAIL_NOT_VERIFIED') {
+      verification.restart();
+      setStep(1);
+      setFlagged('email');
+      setError('email', { message: body.message });
     } else if (body?.code === 'DUPLICATE_EMAIL') {
       setStep(1);
       setFlagged('email');
@@ -109,15 +164,31 @@ export default function SignupForm() {
     }
   };
 
-  const goNext = handleSubmit(() => setStep(2), onInvalid);
+  const goNext = handleSubmit(() => {
+    if (requireVerified()) {
+      setStep(2);
+    }
+  }, onInvalid);
 
-  // 입력칸에서 Enter는 제출이 아니라 다음 칸으로 이동, 마지막 칸에서는 단계의 주 동작
   const onEnter = (e: KeyboardEvent<HTMLFormElement>) => {
     const target = e.target;
     if (e.key !== 'Enter' || !(target instanceof HTMLInputElement) || target.type === 'checkbox') {
       return;
     }
     e.preventDefault();
+
+    if (target.id === 'email' && verification.phase !== 'verified') {
+      if (verification.phase === 'idle') {
+        void sendCode();
+      }
+
+      return;
+    }
+    if (target.id === 'code' && verification.phase === 'sent') {
+      void confirmCode();
+
+      return;
+    }
 
     const inputs = [
       ...e.currentTarget.querySelectorAll<HTMLInputElement>(
@@ -135,11 +206,16 @@ export default function SignupForm() {
     }
   };
 
-  const onValid = (values: SignupInput) =>
+  const onValid = (values: SignupInput) => {
+    if (!requireVerified()) {
+      return;
+    }
+
     mutate(values, {
       onSuccess: () => navigate(paths.login, { state: { signedUp: true } }),
       onError: showServerError,
     });
+  };
 
   return (
     <div>
@@ -187,14 +263,25 @@ export default function SignupForm() {
             error={errorOf('passwordConfirm')}
             registration={register('passwordConfirm')}
           />
-          <TextField
-            id="email"
-            label="이메일"
-            placeholder="비밀번호 찾기에 사용"
-            autoComplete="email"
-            error={errorOf('email')}
-            registration={register('email')}
-          />
+          <div className="mb-3.5">
+            <EmailVerificationFields
+              verification={verification}
+              emailError={errorOf('email')}
+              onSend={() => void sendCode()}
+              onConfirm={() => void confirmCode()}
+              emailInput={
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="비밀번호 찾기에 사용"
+                  autoComplete="email"
+                  aria-invalid={errorOf('email') ? true : undefined}
+                  className={inputStyle}
+                  {...register('email', { onChange: verification.restart })}
+                />
+              }
+            />
+          </div>
           <TermsAgreement
             register={register}
             allChecked={agreeTerms && agreePrivacy}
