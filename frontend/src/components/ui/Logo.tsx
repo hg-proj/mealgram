@@ -1,7 +1,5 @@
 import leaf from '@/assets/logo-leaf.png';
 
-// mealgram 로고, 크기는 부모 글자 크기를 따름
-
 export default function Logo({ className = '' }: { className?: string }) {
   return (
     <span
