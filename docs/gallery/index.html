@@ -1,0 +1,627 @@
+<!doctype html>
+<!-- 화면 목록 -->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>mealgram 화면</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.1.14/swiper-bundle.min.css"
+    />
+    <style>
+      :root {
+        --band: #f5f7f4;
+        --ink: #1d2823;
+        --sub: #6b7670;
+        --line: #e6eae4;
+        --rule: #cdd5ca;
+        --green: #3e7b39;
+        --green-d: #2f6430;
+        --mist: #e9eee7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        word-break: keep-all;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: #fff;
+        color: var(--ink);
+        font-family:
+          'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .top {
+        border-bottom: 1px solid var(--line);
+      }
+      .top-in {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 0 clamp(16px, 3vw, 32px);
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .logo {
+        font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+        font-weight: 600;
+        font-size: 30px;
+        color: var(--green);
+        letter-spacing: -0.01em;
+      }
+      .top-link {
+        font-size: 13px;
+        color: var(--sub);
+      }
+      .top-link:hover {
+        color: var(--green);
+      }
+
+      main {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 56px clamp(16px, 3vw, 32px) 80px;
+      }
+      .eyebrow {
+        font-size: 10.5px;
+        font-weight: 300;
+        letter-spacing: 0.1em;
+        color: var(--green);
+      }
+      h1 {
+        margin: 10px 0 0;
+        font-family: 'Paperlogy', 'Pretendard Variable', sans-serif;
+        font-weight: 800;
+        font-size: clamp(30px, 4vw, 44px);
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 28px;
+        margin-top: 40px;
+        border-bottom: 1px solid var(--rule);
+      }
+      .tab {
+        appearance: none;
+        background: none;
+        border: 0;
+        padding: 0 0 12px;
+        margin-bottom: -1px;
+        font: inherit;
+        font-size: 15px;
+        color: var(--sub);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
+      .tab b {
+        font-weight: 700;
+        margin-left: 4px;
+      }
+      .tab.on {
+        color: var(--ink);
+        border-bottom-color: var(--green);
+        font-weight: 700;
+      }
+      .tab:hover {
+        color: var(--ink);
+      }
+
+      .pane {
+        display: none;
+        margin-top: 28px;
+      }
+      .pane.on {
+        display: block;
+      }
+
+      .stage {
+        background: var(--band);
+        border: 1px solid var(--line);
+      }
+      .swiper-slide .frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #fff;
+        -webkit-user-drag: none;
+        user-select: none;
+      }
+      .mob .swiper-slide .frame {
+        padding: 28px 0;
+        display: flex;
+        justify-content: center;
+      }
+      .mob .swiper-slide .frame img {
+        width: min(100%, 420px);
+        border: 1px solid var(--rule);
+      }
+
+      .mob .stage {
+        background: #fff;
+        border: 0;
+      }
+      .mob .nav {
+        color: var(--green);
+      }
+      .mob .nav svg {
+        filter: none;
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 0 14px;
+      }
+      .cap {
+        font-family: 'Paperlogy', 'Pretendard Variable', sans-serif;
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: -0.03em;
+      }
+
+      .stage {
+        position: relative;
+      }
+      .stage {
+        position: relative;
+      }
+      .navs {
+        position: sticky;
+        top: calc(62vh - 100px);
+        height: 0;
+        z-index: 5;
+      }
+      .nav {
+        position: absolute;
+        top: 0;
+        height: 200px;
+        width: clamp(64px, 14%, 160px);
+        border: 0;
+        background: none;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 0 14px;
+      }
+      .nav.prev {
+        left: 0;
+        justify-content: flex-start;
+      }
+      .nav.next {
+        right: 0;
+        justify-content: flex-end;
+      }
+      .nav.swiper-button-disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .nav svg {
+        width: 40px;
+        height: 40px;
+        display: block;
+        stroke-width: 2;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+      }
+
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 0 14px;
+      }
+      .cap {
+        font-family: 'Paperlogy', 'Pretendard Variable', sans-serif;
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: -0.03em;
+      }
+
+      .stage {
+        position: relative;
+      }
+      .nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 5;
+        width: 56px;
+        height: 96px;
+        border: 0;
+        background: none;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        padding: 0;
+      }
+      .nav.prev {
+        left: 6px;
+      }
+      .nav.next {
+        right: 6px;
+      }
+      .nav.swiper-button-disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .nav svg {
+        width: 40px;
+        height: 40px;
+        display: block;
+        stroke-width: 2;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+      }
+
+      footer {
+        background: var(--green-d);
+        color: #fff;
+      }
+      .foot-in {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 36px clamp(16px, 3vw, 32px);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .foot-logo {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-weight: 600;
+        font-size: 34px;
+      }
+      .foot-in p {
+        margin: 6px 0 0;
+        font-size: 12.5px;
+        opacity: 0.85;
+      }
+
+      @media (max-width: 640px) {
+        main {
+          padding-top: 40px;
+        }
+        .mob .swiper-slide .frame {
+          padding: 14px 0;
+        }
+        .cap {
+          font-size: 16px;
+        }
+        .bar {
+          flex-wrap: wrap;
+          row-gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <div class="top-in">
+        <a class="logo" href="https://github.com/hg-proj/mealgram">mealgram</a>
+        <a class="top-link" href="https://github.com/hg-proj/mealgram">GitHub</a>
+      </div>
+    </div>
+
+    <main>
+      <div class="eyebrow">SCREENS</div>
+      <h1>mealgram 화면 목록</h1>
+
+      <div class="tabs">
+        <button class="tab on" data-t="d">데스크톱</button>
+        <button class="tab" data-t="m">모바일</button>
+      </div>
+
+      <div id="d" class="pane on">
+        <div class="bar"><span class="cap"></span></div>
+        <div class="stage">
+          <div class="navs">
+            <button class="nav prev" aria-label="이전">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 5l-7 7 7 7" />
+              </svg></button
+            ><button class="nav next" aria-label="다음">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          <div class="swiper main-d">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/d01.webp" alt="메인" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d02.webp" alt="메인, 빠른 추천 팝업" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d03.webp" alt="회원가입, 계정 정보" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d04.webp" alt="회원가입, 신체 정보" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/d05.webp" alt="로그인" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d06.webp" alt="비밀번호 찾기" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d07.webp" alt="식단 추천, 신체 정보" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d08.webp" alt="식단 추천, 목표" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d09.webp" alt="식단 추천, 재료 선택" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d10.webp" alt="추천 식단 3개" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d11.webp" alt="식단 상세와 장보기 목록" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/d12.webp" alt="내 식단" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d13.webp" alt="내 식단, 저장한 식단이 없을 때" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d14.webp" alt="마이페이지, 내 정보" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d15.webp" alt="마이페이지, 내 재료" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d16.webp" alt="마이페이지, 회원탈퇴 확인" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/d17.webp" alt="서비스 소개" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/d18.webp" alt="404" draggable="false" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="m" class="pane mob">
+        <div class="bar"><span class="cap"></span></div>
+        <div class="stage">
+          <div class="navs">
+            <button class="nav prev" aria-label="이전">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 5l-7 7 7 7" />
+              </svg></button
+            ><button class="nav next" aria-label="다음">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          <div class="swiper main-m">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/m01.webp" alt="메인" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/m02.webp" alt="메뉴" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/m03.webp" alt="메인, 빠른 추천 팝업" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/m04.webp" alt="회원가입" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/m05.webp" alt="로그인" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/m06.webp" alt="비밀번호 찾기" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/m07.webp" alt="식단 추천" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/m08.webp" alt="추천 식단" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/m09.webp" alt="식단 상세" draggable="false" />
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame"><img src="img/m10.webp" alt="내 식단" draggable="false" /></div>
+              </div>
+              <div class="swiper-slide">
+                <div class="frame">
+                  <img src="img/m11.webp" alt="마이페이지" draggable="false" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="foot-in">
+        <div>
+          <div class="foot-logo">mealgram</div>
+          <p>맞춤 영양 식단 추천 서비스</p>
+        </div>
+        <p>Copyright 2026 mealgram. All Rights Reserved.</p>
+      </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.1.14/swiper-bundle.min.js"></script>
+    <script>
+      const TITLES = {
+        d: [
+          '메인',
+          '메인, 빠른 추천 팝업',
+          '회원가입, 계정 정보',
+          '회원가입, 신체 정보',
+          '로그인',
+          '비밀번호 찾기',
+          '식단 추천, 신체 정보',
+          '식단 추천, 목표',
+          '식단 추천, 재료 선택',
+          '추천 식단 3개',
+          '식단 상세와 장보기 목록',
+          '내 식단',
+          '내 식단, 저장한 식단이 없을 때',
+          '마이페이지, 내 정보',
+          '마이페이지, 내 재료',
+          '마이페이지, 회원탈퇴 확인',
+          '서비스 소개',
+          '404',
+        ],
+        m: [
+          '메인',
+          '메뉴',
+          '메인, 빠른 추천 팝업',
+          '회원가입',
+          '로그인',
+          '비밀번호 찾기',
+          '식단 추천',
+          '추천 식단',
+          '식단 상세',
+          '내 식단',
+          '마이페이지',
+        ],
+      };
+      function gallery(key) {
+        const pane = document.getElementById(key);
+        const titles = TITLES[key];
+        const main = new Swiper('.main-' + key, {
+          keyboard: true,
+          autoHeight: true,
+          spaceBetween: 0,
+        });
+        pane
+          .querySelectorAll('.swiper-slide img')
+          .forEach((img) => img.addEventListener('load', () => main.updateAutoHeight(0)));
+        const cap = pane.querySelector('.cap');
+        function show() {
+          cap.textContent = titles[main.activeIndex];
+        }
+        main.on('slideChange', show);
+        show();
+        const prev = pane.querySelector('.prev'),
+          next = pane.querySelector('.next');
+        prev.addEventListener('click', () => main.slidePrev());
+        next.addEventListener('click', () => main.slideNext());
+        main.on('slideChange', () => {
+          prev.classList.toggle('swiper-button-disabled', main.isBeginning);
+          next.classList.toggle('swiper-button-disabled', main.isEnd);
+        });
+        prev.classList.add('swiper-button-disabled');
+        return main;
+      }
+      const g = { d: gallery('d'), m: gallery('m') };
+      document.querySelectorAll('.tab').forEach((b) =>
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.tab, .pane').forEach((e) => e.classList.remove('on'));
+          b.classList.add('on');
+          document.getElementById(b.dataset.t).classList.add('on');
+          g[b.dataset.t].update();
+        }),
+      );
+    </script>
+  </body>
+</html>
