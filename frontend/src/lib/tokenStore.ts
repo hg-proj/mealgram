@@ -19,7 +19,7 @@ function write(key: string, value: string | null) {
       localStorage.setItem(key, value);
     }
   } catch {
-    // 저장소를 쓸 수 없는 환경에서는 저장하지 않음
+    // 저장소 사용 불가
   }
 }
 

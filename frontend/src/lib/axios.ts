@@ -1,4 +1,5 @@
-import axios, { type InternalAxiosRequestConfig } from 'axios';
+import axios, { isAxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { queryClient } from '@/lib/queryClient';
 import { tokenStore } from '@/lib/tokenStore';
 
 // axios 인스턴스, 토큰 첨부, 401 재발급
@@ -45,8 +46,11 @@ api.interceptors.response.use(
         const token = await reissueAccessToken();
         config.headers.Authorization = `Bearer ${token}`;
         return api(config);
-      } catch {
-        tokenStore.clear();
+      } catch (reissueError) {
+        if (isAxiosError(reissueError) && reissueError.response) {
+          tokenStore.clear();
+          queryClient.clear();
+        }
       }
     }
 

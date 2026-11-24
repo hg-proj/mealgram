@@ -62,4 +62,13 @@ describe('axios 인스턴스', () => {
     expect(tokenStore.getAccessToken()).toBeNull();
     expect(tokenStore.getRefreshToken()).toBeNull();
   });
+
+  it('재발급 중 네트워크 오류가 나면 저장된 토큰을 지우지 않는다.', async () => {
+    tokenStore.setTokens('old-access', 'refresh');
+    server.use(http.post('*/api/auth/refresh', () => HttpResponse.error()));
+
+    await expect(api.get('/members/me')).rejects.toBeTruthy();
+
+    expect(tokenStore.getRefreshToken()).toBe('refresh');
+  });
 });

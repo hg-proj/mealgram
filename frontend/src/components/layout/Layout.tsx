@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router';
+import { Outlet, ScrollRestoration } from 'react-router';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
@@ -7,7 +7,7 @@ import Header from '@/components/layout/Header';
 
 export default function Layout() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <Header />
       <main className="flex flex-1 flex-col">
         <ErrorBoundary>
@@ -15,6 +15,7 @@ export default function Layout() {
         </ErrorBoundary>
       </main>
       <Footer />
+      <ScrollRestoration />
     </div>
   );
 }
