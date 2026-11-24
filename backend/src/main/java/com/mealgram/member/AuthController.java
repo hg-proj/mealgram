@@ -21,10 +21,13 @@ import com.mealgram.member.dto.SignupResponse;
 import com.mealgram.member.dto.VerifyResetCodeRequest;
 import com.mealgram.member.dto.VerifyResetCodeResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 // 인증 API 엔드포인트
 
+@Tag(name = "인증")
 @RestController 
 @RequestMapping("/auth")
 public class AuthController {
@@ -35,6 +38,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @Operation(summary = "회원가입")
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
 
@@ -44,6 +48,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "로그인")
     @PostMapping ("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         
@@ -53,6 +58,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "토큰 재발급")
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponse> refresh(@Valid @RequestBody RefreshRequest request) {
 
@@ -60,6 +66,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request) {
 
@@ -69,6 +76,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "가입 인증번호 발송")
     @PostMapping("/signup/send-code")
     public ResponseEntity<Void> sendSignupCode(@Valid @RequestBody SignupCodeRequest request) {
 
@@ -78,6 +86,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "가입 인증번호 확인")
     @PostMapping("/signup/verify-code")
     public ResponseEntity<Void> verifySignupCode(@Valid @RequestBody SignupCodeVerifyRequest request) {
 
@@ -87,6 +96,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "비밀번호 재설정 인증번호 발송")
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
 
@@ -96,6 +106,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "비밀번호 재설정 인증번호 확인")
     @PostMapping("/verify-reset-code")
     public ResponseEntity<VerifyResetCodeResponse> verifyResetCode(@Valid @RequestBody VerifyResetCodeRequest request) {
 
@@ -103,6 +114,7 @@ public class AuthController {
 
     }
 
+    @Operation(summary = "비밀번호 재설정")
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
 

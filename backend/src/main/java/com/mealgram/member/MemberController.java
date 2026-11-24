@@ -11,11 +11,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mealgram.member.dto.MemberResponse;
 import com.mealgram.member.dto.MemberUpdateRequest;
+import com.mealgram.config.OpenApiConfig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 // 내정보 조회, 수정, 회원탈퇴 API 엔드포인트
 
+@Tag(name = "회원")
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 @RestController
 @RequestMapping("/members/me")
 public class MemberController {
@@ -26,6 +32,7 @@ public class MemberController {
         this.memberService = memberService;
     }
 
+    @Operation(summary = "내 정보 조회")
     @GetMapping
     public ResponseEntity<MemberResponse> get(@AuthenticationPrincipal Long memberId) {
 
@@ -33,6 +40,7 @@ public class MemberController {
 
     }
 
+    @Operation(summary = "내 정보 수정")
     @PatchMapping
     public ResponseEntity<MemberResponse> update(@AuthenticationPrincipal Long memberId,
                                                  @Valid @RequestBody MemberUpdateRequest request) {
@@ -41,6 +49,7 @@ public class MemberController {
 
     }
 
+    @Operation(summary = "회원탈퇴")
     @DeleteMapping
     public ResponseEntity<Void> delete(@AuthenticationPrincipal Long memberId) {
 

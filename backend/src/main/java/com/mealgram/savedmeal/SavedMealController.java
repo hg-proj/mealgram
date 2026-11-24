@@ -21,11 +21,17 @@ import com.mealgram.common.validation.SortValidator;
 import com.mealgram.savedmeal.dto.SavedMealCreateResponse;
 import com.mealgram.savedmeal.dto.SavedMealRequest;
 import com.mealgram.savedmeal.dto.SavedMealResponse;
+import com.mealgram.config.OpenApiConfig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 // 내 식단 저장, 목록 조회, 삭제 API 엔드포인트
 
+@Tag(name = "내 식단")
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 @RestController
 @RequestMapping("/saved-meals")
 public class SavedMealController {
@@ -38,6 +44,7 @@ public class SavedMealController {
         this.savedMealService = savedMealService;
     }
 
+    @Operation(summary = "식단 저장")
     @PostMapping
     public ResponseEntity<SavedMealCreateResponse> save(@AuthenticationPrincipal Long memberId,
                                                         @Valid @RequestBody SavedMealRequest request) {
@@ -46,6 +53,7 @@ public class SavedMealController {
 
     }
 
+    @Operation(summary = "저장한 식단 목록 조회")
     @GetMapping
     public ResponseEntity<List<SavedMealResponse>> getSavedMeals(
             @AuthenticationPrincipal Long memberId,
@@ -57,6 +65,7 @@ public class SavedMealController {
 
     }
 
+    @Operation(summary = "저장한 식단 삭제")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal Long memberId, @PathVariable Long id) {
 

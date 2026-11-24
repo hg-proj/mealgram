@@ -25,11 +25,16 @@ import com.mealgram.ingredient.dto.IngredientSearchResponse;
 import com.mealgram.ingredient.dto.MyIngredientCreateResponse;
 import com.mealgram.ingredient.dto.MyIngredientRequest;
 import com.mealgram.ingredient.dto.MyIngredientResponse;
+import com.mealgram.config.OpenApiConfig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 // 재료 검색, 내 재료 등록/조회/삭제 API 엔드포인트
 
+@Tag(name = "재료")
 @RestController
 public class IngredientController {
 
@@ -43,6 +48,7 @@ public class IngredientController {
         this.ingredientService = ingredientService;
     }
 
+    @Operation(summary = "재료 검색")
     @GetMapping("/ingredients")
     public ResponseEntity<List<IngredientSearchResponse>> search(
             @RequestParam(defaultValue = "") String keyword,
@@ -57,6 +63,7 @@ public class IngredientController {
 
     }
 
+    @Operation(summary = "분류별 재료 조회")
     @GetMapping("/ingredients/catalog")
     public ResponseEntity<List<IngredientCatalogResponse>> getCatalog() {
 
@@ -64,6 +71,8 @@ public class IngredientController {
 
     }
 
+    @Operation(summary = "내 재료 조회")
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @GetMapping("/members/me/ingredients")
     public ResponseEntity<List<MyIngredientResponse>> getMyIngredients(
             @AuthenticationPrincipal Long memberId,
@@ -75,6 +84,8 @@ public class IngredientController {
 
     }
 
+    @Operation(summary = "내 재료 등록")
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @PostMapping("/members/me/ingredients")
     public ResponseEntity<MyIngredientCreateResponse> addMyIngredient(
             @AuthenticationPrincipal Long memberId,
@@ -86,6 +97,8 @@ public class IngredientController {
 
     }
 
+    @Operation(summary = "내 재료 삭제")
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @DeleteMapping("/members/me/ingredients/{id}")
     public ResponseEntity<Void> deleteMyIngredient(
             @AuthenticationPrincipal Long memberId,
