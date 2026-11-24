@@ -15,11 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mealgram.meal.dto.MealRequest;
 import com.mealgram.meal.dto.MealResponse;
 import com.mealgram.meal.dto.MealSample;
+import com.mealgram.config.OpenApiConfig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 // 식단 추천 요청, 결과 재조회, 랜덤 식단 API 엔드포인트
 
+@Tag(name = "식단")
 @RestController
 @RequestMapping("/meals")
 public class MealController {
@@ -32,6 +37,8 @@ public class MealController {
         this.mealSampleService = mealSampleService;
     }
 
+    @Operation(summary = "식단 추천")
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @PostMapping
     public ResponseEntity<MealResponse> recommend(@Valid @RequestBody MealRequest request,
                                                   @AuthenticationPrincipal Long memberId) {
@@ -46,6 +53,7 @@ public class MealController {
 
     }
 
+    @Operation(summary = "추천 식단 샘플 조회")
     @GetMapping("/samples")
     public ResponseEntity<List<MealSample>> samples() {
 
@@ -53,6 +61,8 @@ public class MealController {
 
     }
 
+    @Operation(summary = "식단 추천 결과 조회")
+    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @GetMapping("/{id}")
     public ResponseEntity<MealResponse> get(@PathVariable String id, @AuthenticationPrincipal Long memberId) {
 
