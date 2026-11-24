@@ -1,5 +1,7 @@
 # mealgram API 명세
 
+Swagger UI: `/swagger-ui.html`, OpenAPI 문서: `/v3/api-docs`
+
 ## 화면 목록
 
 **필수**
