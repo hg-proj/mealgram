@@ -35,11 +35,11 @@ erDiagram
     %% ==========================================
 
     %% 회원 - 회원재료: 1:N
-    member ||--o{ member_ingredient : places 
+    member ||--o{ member_ingredient : has 
     %% 회원 - 회원저장식단: 1:N
-    member ||--o{ member_saved_meal : places 
+    member ||--o{ member_saved_meal : saves 
     %% 재료 - 회원재료: 1:N
-    ingredient ||--o{ member_ingredient : places
+    ingredient ||--o{ member_ingredient : owned_as
 
 
 
@@ -65,7 +65,7 @@ erDiagram
         TIMESTAMP updated_at
     }
 
-    member_ingredient  {
+    member_ingredient {
         BIGINT id PK
         BIGINT member_id FK 
         BIGINT ingredient_id FK 
