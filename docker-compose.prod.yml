@@ -1,0 +1,43 @@
+services:
+
+  # DB
+  postgres:
+
+    ports: !reset []
+    restart: unless-stopped
+
+  # Redis
+  redis:
+
+    ports: !reset []
+    restart: unless-stopped
+
+  # backend
+  backend:
+
+    ports: !reset []
+    restart: unless-stopped
+
+    environment:
+      FRONTEND_URL: https://${DOMAIN}
+      APP_RESET_CODE_LOG: "false"
+
+  # web
+  web:
+
+    build: ./frontend
+    container_name: mealgram-web
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    environment:
+      DOMAIN: ${DOMAIN}
+
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+
+    depends_on:
+      - backend
